@@ -1,0 +1,25 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel deploy hook
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEPLOY_HOOK_URL:-}" ]; then
+            echo "ERROR: VERCEL_DEPLOY_HOOK_URL secret is not set."
+            echo "Create it at: https://github.com/${{ github.repository }}/settings/secrets/actions"
+            echo "Get the hook URL from: https://vercel.com/fairwaycircle/polymarket-desk/settings/git"
+            exit 1
+          fi
+          curl -fsSL -X POST "$DEPLOY_HOOK_URL" | tee /tmp/resp.json
+          echo
+          echo "deployment requested at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"

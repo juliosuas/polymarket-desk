@@ -166,6 +166,41 @@
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
+  /* APUESTAS — recommendation cards */
+  .bet-card { background: var(--panel); border: 1px solid var(--line);
+    border-radius: 6px; padding: 14px 16px; display:flex; flex-direction: column;
+    gap: 8px; transition: border-color 0.2s; }
+  .bet-card:hover { border-color: var(--line2); }
+  .bet-card.safe { border-left: 3px solid var(--green); }
+  .bet-card.today { border-left: 3px solid var(--amber); }
+  .bet-card.yours { border-left: 3px solid var(--violet); }
+  .bet-card .q { color: var(--fg); font-size: 12.5px; line-height: 1.35;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .bet-card .q .star-card { color: var(--mut); cursor:pointer; font-size: 16px;
+    user-select:none; flex-shrink: 0; transition: color 0.15s, transform 0.15s; }
+  .bet-card .q .star-card.on { color: var(--amber); }
+  .bet-card .q .star-card:hover { color: var(--amber); transform: scale(1.18); }
+  .bet-card .action { display:flex; align-items:baseline; gap: 10px;
+    flex-wrap: wrap; }
+  .bet-card .verb { color: var(--fg); font-size: 11px; letter-spacing: .12em; }
+  .bet-card .side-yes { color: var(--green); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
+  .bet-card .side-no { color: var(--red); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
+  .bet-card .price { color: var(--amber); font-weight: 700; font-size: 22px;
+    font-variant-numeric: tabular-nums; }
+  .bet-card .econ { font-size: 11px; color: var(--mut); }
+  .bet-card .econ .win { color: var(--green); font-variant-numeric: tabular-nums; }
+  .bet-card .econ .risk { color: var(--red); font-variant-numeric: tabular-nums; }
+  .bet-card .meta-row { display:flex; justify-content:space-between; gap: 8px;
+    color: var(--mut); font-size: 11px; padding-top: 4px;
+    border-top: 1px solid var(--line); }
+  .bet-card .meta-row .pill-conf { background: rgba(34,197,94,.12); color: var(--green);
+    border: 1px solid rgba(34,197,94,.3); padding: 1px 6px; border-radius: 9999px;
+    font-size: 9.5px; font-weight: 600; letter-spacing: .04em; }
+  .bet-card .yes-big { color: var(--amber); font-weight: 700; font-size: 22px;
+    font-variant-numeric: tabular-nums; }
+  .bet-card .yes-big.up { color: var(--green); }
+  .bet-card .yes-big.down { color: var(--red); }
+
   .empty-state { padding: 40px 20px; text-align:center; color: var(--mut); }
   .empty-state h3 { color: var(--fg); margin: 0 0 8px 0; font-weight: 500; font-size: 14px; }
   .empty-state p { margin: 6px 0; font-size: 12px; }
@@ -198,26 +233,50 @@
 <main>
 
 <div class="tabs">
-  <div class="tab active" data-tab="watchlist">WATCHLIST <span class="badge" id="wl-count">0</span></div>
+  <div class="tab active" data-tab="apuestas">APUESTAS</div>
   <div class="tab" data-tab="trending">TRENDING</div>
   <div class="tab" data-tab="value">VALUE PLAYS</div>
   <div class="tab" data-tab="screens">SCREENS</div>
 </div>
 
-<!-- WATCHLIST TAB (default) -->
-<div class="tab-pane active" data-pane="watchlist">
+<!-- APUESTAS TAB (default) — three sections: SEGURAS / HOY / TUYAS -->
+<div class="tab-pane active" data-pane="apuestas">
+
   <section>
     <div class="section-title">
-      <h2>YOUR WATCHLIST</h2>
-      <span class="sub">live · synced via your token</span>
+      <h2>🟢 LAS MÁS SEGURAS</h2>
+      <span class="sub">95%+ probabilidad implícita · pagos pequeños, alta tasa de aciertos</span>
+    </div>
+    <div id="safest-grid" class="grid grid-3"></div>
+    <div id="safest-empty" class="empty-state" style="display:none;">
+      <p>No hay mercados que cumplan el filtro ahora. Vuelve más tarde.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <h2>🔥 LO DEL DÍA</h2>
+      <span class="sub">grandes movimientos en las últimas 24h con flujo</span>
+    </div>
+    <div id="today-grid" class="grid grid-3"></div>
+    <div id="today-empty" class="empty-state" style="display:none;">
+      <p>Sin movimientos grandes hoy. Mira VALUE PLAYS para más opciones.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <h2>⭐ LAS TUYAS <span class="badge" id="wl-count" style="margin-left:6px;">0</span></h2>
+      <span class="sub">tu watchlist · sincronizada</span>
     </div>
     <div id="wl-grid" class="grid grid-3"></div>
     <div id="wl-empty" class="empty-state" style="display:none;">
       <h3>Tu watchlist está vacía</h3>
-      <p>Marca <span style="color:var(--amber); font-size:14px;">☆</span> en cualquier mercado de TRENDING, VALUE PLAYS o SCREENS para agregarlo aquí.</p>
-      <p>Tu watchlist se sincroniza entre dispositivos. Comparte el link <code>📋 share watchlist</code> para ver la misma lista en tu teléfono.</p>
+      <p>Marca <span style="color:var(--amber); font-size:14px;">☆</span> en cualquier mercado para agregarlo aquí.</p>
+      <p>Comparte el link <code>📋 share watchlist</code> para ver la misma lista en otro dispositivo.</p>
     </div>
   </section>
+
 </div>
 
 <!-- TRENDING TAB -->
@@ -503,6 +562,8 @@ function render(s) {
   }
 
   if (s.watchlist) renderWatchlist(s.watchlist);
+  if (s.safest) renderSafest(s.safest);
+  if (s.today_movers) renderToday(s.today_movers);
   if (s.events) renderEvents(s.events);
   if (s.top_movers) renderMovers('mv-tbl', s.top_movers);
   if (s.trending_markets) renderTrending(s.trending_markets);
@@ -514,34 +575,107 @@ function render(s) {
   updateAllStars();
 }
 
+function renderSafest(rows) {
+  const grid = document.getElementById('safest-grid');
+  const empty = document.getElementById('safest-empty');
+  if (!rows || !rows.length) {
+    grid.innerHTML = ''; grid.style.display = 'none'; empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none'; grid.style.display = '';
+  grid.innerHTML = rows.map(m => {
+    const slugEsc = escapeHtml(m.slug || '');
+    const onWl = watchlistSlugs.has(m.slug);
+    const sideCls = m.rec_side === 'YES' ? 'side-yes' : 'side-no';
+    const sideTxt = m.rec_side === 'YES' ? 'SÍ' : 'NO';
+    const priceCents = (m.rec_price * 100).toFixed(1);
+    const winCents = (m.rec_payout * 100).toFixed(1);
+    const riskCents = (m.rec_risk * 100).toFixed(1);
+    const confPct = (m.rec_price * 100).toFixed(0);
+    const days = m.days != null ? m.days + 'd' : '—';
+    return `<div class="bet-card safe">
+      <div class="q">
+        <span>${escapeHtml(m.question || '')}</span>
+        <span class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</span>
+      </div>
+      <div class="action">
+        <span class="verb">APUESTA</span>
+        <span class="${sideCls}">${sideTxt}</span>
+        <span class="verb">a</span>
+        <span class="price">${priceCents}¢</span>
+      </div>
+      <div class="econ">
+        ganas <span class="win">${winCents}¢</span> si pasa · arriesgas <span class="risk">${riskCents}¢</span> si no
+      </div>
+      <div class="meta-row">
+        <span><span class="pill-conf">🟢 ${confPct}%</span></span>
+        <span>${fmt.vol(m.vol24h)} · ${days}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderToday(rows) {
+  const grid = document.getElementById('today-grid');
+  const empty = document.getElementById('today-empty');
+  if (!rows || !rows.length) {
+    grid.innerHTML = ''; grid.style.display = 'none'; empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none'; grid.style.display = '';
+  grid.innerHTML = rows.map(m => {
+    const slugEsc = escapeHtml(m.slug || '');
+    const onWl = watchlistSlugs.has(m.slug);
+    const c = (m.one_day_change || 0) * 100;
+    const cls = c > 0 ? 'up' : 'down';
+    const cpill = c > 0 ? 'pill-green' : 'pill-red';
+    const sign = c > 0 ? '+' : '';
+    const days = m.days != null ? m.days + 'd' : '—';
+    return `<div class="bet-card today">
+      <div class="q">
+        <span>${escapeHtml(m.question || '')}</span>
+        <span class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</span>
+      </div>
+      <div class="action" style="align-items:center;">
+        <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
+        <span class="pill ${cpill}">${sign}${c.toFixed(1)}pp 24h</span>
+      </div>
+      <div class="meta-row">
+        <span>${fmt.vol(m.vol24h)} 24h</span>
+        <span>faltan ${days}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderWatchlist(wl) {
   const grid = document.getElementById('wl-grid');
   const empty = document.getElementById('wl-empty');
   if (!wl || wl.length === 0) {
-    grid.innerHTML = '';
-    grid.style.display = 'none';
-    empty.style.display = 'block';
+    grid.innerHTML = ''; grid.style.display = 'none'; empty.style.display = 'block';
     return;
   }
-  empty.style.display = 'none';
-  grid.style.display = '';
+  empty.style.display = 'none'; grid.style.display = '';
   grid.innerHTML = wl.map(m => {
+    const slugEsc = escapeHtml(m.slug || '');
     const c = (m.one_day_change || 0) * 100;
     const cls = c > 0 ? 'up' : (c < 0 ? 'down' : '');
     const cpill = c > 0 ? 'pill-green' : (c < 0 ? 'pill-red' : 'pill-amber');
     const sign = c > 0 ? '+' : '';
     const days = m.days != null ? m.days + 'd' : '—';
-    const slugEsc = escapeHtml(m.slug || '');
-    return `<div class="card">
-      <h3>
-        <span class="qtxt">${escapeHtml(m.question || '')}</span>
-        <span class="star-card" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')" style="cursor:pointer; font-size:16px; color:var(--amber);">★</span>
-      </h3>
-      <div class="yes ${cls}">${fmt.pct(m.yes)}</div>
-      <div style="margin-top:4px;"><span class="pill ${cpill}">${sign}${c.toFixed(1)}pp 24h</span></div>
-      <div class="row"><span>BID/ASK</span><span>${fmt.pct(m.best_bid)} / ${fmt.pct(m.best_ask)}</span></div>
-      <div class="row"><span>VOL 24H</span><span>${fmt.vol(m.vol24h)}</span></div>
-      <div class="row"><span>END</span><span>${days}</span></div>
+    return `<div class="bet-card yours">
+      <div class="q">
+        <span>${escapeHtml(m.question || '')}</span>
+        <span class="star-card on" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')">★</span>
+      </div>
+      <div class="action" style="align-items:center;">
+        <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
+        <span class="pill ${cpill}">${sign}${c.toFixed(1)}pp 24h</span>
+      </div>
+      <div class="meta-row">
+        <span>BID/ASK ${fmt.pct(m.best_bid)} / ${fmt.pct(m.best_ask)}</span>
+        <span>${fmt.vol(m.vol24h)} · ${days}</span>
+      </div>
     </div>`;
   }).join('');
 }

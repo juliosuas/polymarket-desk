@@ -23,3 +23,5 @@ com.ghostcat.rocha-tracker.plist
 .vscode/
 .idea/
 *.swp
+.vercel
+.env*.local

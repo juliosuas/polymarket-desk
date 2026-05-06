@@ -49,6 +49,24 @@ VP_MIN_VOL24 = 30_000
 VP_MIN_DAYS = 3
 VP_MAX_DAYS = 90
 
+# Safest picks (near-cert, ending soon, liquid). Used by APUESTAS landing.
+# Bands chosen so there's still meaningful payout per share (1.5pp to 8pp).
+# Below 0.015 / above 0.985 the payout is dust and the market is effectively resolved.
+SAFEST_YES_LO = 0.92
+SAFEST_YES_HI = 0.985
+SAFEST_NO_LO = 0.015
+SAFEST_NO_HI = 0.08
+SAFEST_MIN_VOL24 = 30_000
+SAFEST_MIN_DAYS = 1
+SAFEST_MAX_DAYS = 30
+SAFEST_TOP_N = 6
+
+# Today's movers (catalyst-driven, but stricter than the general top_movers screen).
+TODAY_MIN_CHG = 0.08
+TODAY_MIN_VOL24 = 50_000
+TODAY_RESOLVED_BAND = 0.005   # exclude markets at <=0.5% or >=99.5% (essentially closed)
+TODAY_TOP_N = 6
+
 TOP_N = 8
 
 EXCLUDE_PATTERNS = [
@@ -260,6 +278,70 @@ def screen_top_movers(rows):
     return keep[:TOP_N]
 
 
+def _annotate_side(r: dict) -> dict:
+    """Annotate a market row with the recommended bet side (YES/NO) and economics.
+
+    A market at YES=97% maps to: side=YES, price=0.97, payout=0.03, risk=0.97
+    A market at YES= 3% maps to: side=NO,  price=0.97, payout=0.03, risk=0.97
+
+    'price' is what you pay per share, 'payout' is profit if you win, 'risk' is
+    what you lose if you lose. Per-share economics; multiply by share count.
+    """
+    y = r["yes"]
+    if y >= 0.5:
+        side, price, payout, risk = "YES", y, 1 - y, y
+    else:
+        side, price, payout, risk = "NO", 1 - y, y, 1 - y
+    return {
+        **r,
+        "rec_side": side,
+        "rec_price": round(price, 4),
+        "rec_payout": round(payout, 4),
+        "rec_risk": round(risk, 4),
+    }
+
+
+def screen_safest(rows):
+    """Markets the consensus is overwhelmingly committed to but not yet resolved.
+
+    Filter:
+      - YES in [0.92, 0.985] (BET YES, payout 1.5-8pp) OR
+        YES in [0.015, 0.08] (BET NO,  payout 1.5-8pp)
+      - liquid (vol24h >= $30k) and ending within 1-30 days
+      - excludes sports heads-up
+    Sort: most-confident first (highest rec_price), then sooner-resolution.
+    """
+    keep = []
+    for r in rows:
+        y = r["yes"]
+        side_ok = (SAFEST_YES_LO <= y <= SAFEST_YES_HI) or (SAFEST_NO_LO <= y <= SAFEST_NO_HI)
+        if not side_ok:
+            continue
+        if r["vol24h"] < SAFEST_MIN_VOL24:
+            continue
+        if not (SAFEST_MIN_DAYS <= r["days"] <= SAFEST_MAX_DAYS):
+            continue
+        if any(p.search(r["question"]) for p in EXCLUDE_PATTERNS):
+            continue
+        keep.append(_annotate_side(r))
+    keep.sort(key=lambda r: (-r["rec_price"], r["days"]))
+    return keep[:SAFEST_TOP_N]
+
+
+def screen_today(rows):
+    """Catalyst-grade movers in the last 24h. Stricter than top_movers; skip resolved."""
+    keep = [
+        r for r in rows
+        if abs(r["one_day_change"]) >= TODAY_MIN_CHG
+        and r["vol24h"] >= TODAY_MIN_VOL24
+        and r["days"] > 0
+        and TODAY_RESOLVED_BAND < r["yes"] < (1 - TODAY_RESOLVED_BAND)
+        and not any(p.search(r["question"]) for p in EXCLUDE_PATTERNS)
+    ]
+    keep.sort(key=lambda r: -abs(r["one_day_change"]))
+    return keep[:TODAY_TOP_N]
+
+
 def screen_value_plays(rows):
     """Surface markets at extreme implied probabilities with active flow.
 
@@ -310,6 +392,8 @@ def collect(user_token: str | None = None):
 
     payload = {
         "ts": datetime.now(timezone.utc).isoformat(),
+        "safest": screen_safest(rows),
+        "today_movers": screen_today(rows),
         "trending_markets": rows[:TRENDING_LIMIT],
         "high_conv": screen_high_conv(rows),
         "top_movers": screen_top_movers(rows),
