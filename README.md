@@ -1,131 +1,98 @@
 # polymarket-desk
 
-A Bloomberg-terminal-styled Polymarket dashboard with a daily research tracker. Originally built around the Sinaloa Gov. Rubén Rocha Moya extradition contract; generalized to surface trending markets, top movers, and high-conviction events across the platform.
+A Bloomberg-terminal-styled dashboard for Polymarket. Live trending markets, top movers, value plays auto-screen, and a synced personal watchlist. Read-only by design — no trading, no keys.
 
-## What's in here
+## Features
+
+- **Watchlist** — star any market, syncs across devices via a per-user token
+- **Trending** — top events by 24h volume, top movers, top markets
+- **Value Plays** — heuristic auto-screen that surfaces extreme prices with active flow
+- **Screens** — high-conviction (YES 70-97%, ending soon) + top flow
+- **Live Tape** — last 30 trades platform-wide, flashing on each new fill
+- **Real-time-ish** — 5s polling with edge-cached responses
+
+## Stack
+
+- Python serverless functions on Vercel (`api/state.py`, `api/watchlist.py`)
+- Vercel KV (Redis) for watchlist persistence
+- Vanilla JS / HTML / CSS dashboard (`public/index.html`) — no build step
+- Polymarket Gamma + data-api endpoints (public, unauthenticated)
+
+## Layout
 
 ```
 .
-├── tracker.py                   # daily research script (cron-driven)
-├── server.py                    # local realtime dashboard (SSE + polling)
-├── dashboard.html               # SPA UI for the local dashboard
-├── run.sh                       # launchd wrapper
-├── com.ghostcat.rocha-tracker.plist.example   # daily 09:00 cron template
-├── com.ghostcat.rocha-dashboard.plist         # always-on dashboard service
-├── REPORT_2026-05-06.md         # initial analyst desk note (Rocha case)
-├── SUMMARY.md                   # quick-read summary
-└── vercel/                      # serverless deploy of the dashboard
-    ├── api/state.py             # combined Polymarket fetcher
-    ├── public/index.html        # polling-based version of the dashboard
-    └── vercel.json
+├── api/
+│   ├── state.py        # combined Polymarket fetcher (parallel)
+│   └── watchlist.py    # KV CRUD: GET/POST/DELETE /api/watchlist?u=<token>
+├── public/
+│   └── index.html      # SPA dashboard
+├── vercel.json         # functions + headers config
+└── README.md
 ```
 
-## What it does
+## How identity works
 
-### Local services (macOS launchd)
-
-- **`com.ghostcat.rocha-tracker`** — runs `tracker.py` daily at 09:00.
-  - Pulls Polymarket Gamma API for tracked contracts and trending markets.
-  - Pulls Google News RSS for headline scanning.
-  - Saves a JSON snapshot for historical sparklines.
-  - **Sends iMessage only when alert gates fire** (catalyst-grade move, near-cert bet, news red-flag). Silent otherwise.
-- **`com.ghostcat.rocha-dashboard`** — keeps `server.py` running on `127.0.0.1:7878`.
-  - Background thread polls Polymarket every 3s and pushes via Server-Sent Events to all connected browsers.
-  - Endpoints: `/`, `/api/state`, `/api/stream` (SSE), `/api/history`.
-
-### Cloud deploy (Vercel)
-
-- Same dashboard, polling-based (no SSE — Vercel is serverless).
-- `api/state.py` is a Vercel Python function that fetches Polymarket in parallel per request.
-- `public/index.html` polls `/api/state` every 5 s, pauses when tab is hidden.
+No login. Each browser generates a UUID v4 and stores it in `localStorage['polydash_user']`. Every API call appends `?u=<uuid>`. To use the same watchlist on another device, click **share watchlist** in the header — it copies a URL with your token. Open that URL on the other device once and the token is adopted.
 
 ## Data sources
 
-- **Polymarket Gamma API** — `https://gamma-api.polymarket.com/markets`, `/events`
-- **Polymarket Data API** — `https://data-api.polymarket.com/trades` (live tape)
-- **Google News RSS** — `https://news.google.com/rss/search` (Spanish-language, MX region)
+- `https://gamma-api.polymarket.com/markets` — market list, prices, volumes
+- `https://gamma-api.polymarket.com/events` — events with grouped sub-markets
+- `https://data-api.polymarket.com/trades` — recent trade tape
 
-All endpoints are public and unauthenticated.
-
-## Alert gating philosophy
-
-The tracker is **silent by default**. iMessage fires only when:
-
-| # | Trigger | Threshold |
-|---|---------|-----------|
-| 1 | Tracked contract Δ24h | ≥ 7 pp |
-| 2 | Tracked contract regime change | YES > 50 % or < 5 % |
-| 3 | Near-certainty bet | YES ≥ 95 %, end ≤ 10 d, vol24h ≥ $30 k |
-| 4 | Major dislocation | \|Δ24h\| ≥ 25 pp AND vol24h ≥ $200 k |
-| 5 | News red-flag keyword | "extraditado", "detenido", "orden de aprehensión", "fuga", etc. |
-
-Sports heads-up matches (e.g., tennis singles) are filtered out of trigger 4 — they resolve daily with huge swings but are not catalyst events.
-
-## Setup (local)
+## Local development
 
 ```bash
-# 1. Clone and enter
+# clone
 git clone git@github.com:juliosuas/polymarket-desk.git
 cd polymarket-desk
 
-# 2. Sanity-check that Python 3 + osascript work
-python3 -c "import urllib.request,xml.etree.ElementTree"
-which osascript
-
-# 3. Make a real plist from the example, set your iMessage phone (E.164)
-cp com.ghostcat.rocha-tracker.plist.example com.ghostcat.rocha-tracker.plist
-# edit the file: replace +1XXXXXXXXXX and YOUR_USER
-
-# 4. Install launchd jobs
-mkdir -p ~/Library/LaunchAgents
-cp com.ghostcat.rocha-tracker.plist ~/Library/LaunchAgents/
-cp com.ghostcat.rocha-dashboard.plist ~/Library/LaunchAgents/
-launchctl load -w ~/Library/LaunchAgents/com.ghostcat.rocha-tracker.plist
-launchctl load -w ~/Library/LaunchAgents/com.ghostcat.rocha-dashboard.plist
-
-# 5. Open dashboard
-open http://127.0.0.1:7878
+# spin up Vercel-like dev environment
+vercel dev      # auto-installs Python runtime, runs at http://localhost:3000
 ```
 
-On first iMessage send, macOS will prompt for **Automation → Messages** permission. Allow it.
+Without Vercel KV configured locally, the `/api/watchlist` endpoints will error and the watchlist tab will be empty — the rest works (trending, value plays, screens, live tape).
 
-## Setup (Vercel)
+You can also exercise the data layer in plain Python:
 
 ```bash
-cd vercel
-vercel link
+python3 -c "import sys; sys.path.insert(0,'api'); import state; print(state.collect()['value_plays'])"
+```
+
+## Production deploy
+
+Connected to GitHub via Vercel git integration — every push to `main` triggers a build. To deploy manually:
+
+```bash
 vercel deploy --prod
 ```
 
-Disable deployment protection if needed:
+### One-time KV provisioning
 
-```bash
-vercel project protection disable <project-name> --sso --non-interactive
-vercel project protection disable <project-name> --password --non-interactive
+1. In the Vercel dashboard → Project → Storage → Create → KV (Upstash Redis)
+2. Connect it to this project; Vercel injects `KV_REST_API_URL` + `KV_REST_API_TOKEN` env vars automatically.
+3. Redeploy.
+
+If env vars are missing, watchlist endpoints return 500 and the dashboard's watchlist tab will be empty (everything else still works).
+
+## Value Plays scoring
+
+```
+score = extremity × log10(vol24h/10k) × (1 + |Δ24h|*5)
 ```
 
-`*.vercel.app` URLs may still show "Pending Approval" to logged-in Vercel users on a different team. Workarounds: incognito window, or attach a custom domain.
+Filter: YES in [5%, 20%] ∪ [80%, 95%], `vol24h ≥ $30k`, end in 3-90d, sports heads-up excluded.
 
-## Adding new tracked contracts
+The premise: extreme prices with active flow are where conviction trades typically live. The market is making a strong call — your edge is having a contrarian view backed by analysis. The screen surfaces candidates; the homework is yours.
 
-Edit `tracker.MARKETS` (and `vercel/api/state.py`'s `ROCHA_MARKETS`) with new Polymarket slugs and your analyst desk fair-value estimates:
+## Out of scope
 
-```python
-{"key": "my_event",
- "label": "Will X happen by Y?",
- "slug": "polymarket-slug-here",
- "fair_yes": 0.10}
-```
-
-Snapshots, screen filters, and dashboard cards pick up the change automatically.
-
-## Files NOT in this repo (gitignored)
-
-- `logs/` — runtime logs.
-- `snapshots/` — daily JSON snapshots (host filesystem).
-- `com.ghostcat.rocha-tracker.plist` — the live plist with your phone number.
-- `.vercel/` — Vercel project linkage.
+- Trading integration (CLOB orders, wallet connect) — explicitly deferred
+- Daily snapshots / historical sparklines — not implemented in cloud
+- News scraping — removed (was Rocha-specific)
+- iMessage alert tracker — removed (was Rocha-specific)
 
 ## License
 
-Personal use. Polymarket data is public; news content belongs to its publishers. Don't redistribute headlines as your own. Trading at your own risk.
+Personal use. Polymarket data is public; don't redistribute commercially. Trading on Polymarket: at your own risk and only where legal in your jurisdiction.

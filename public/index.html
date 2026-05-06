@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>POLYMARKET DESK · realtime</title>
+<title>POLYMARKET DESK</title>
 <style>
   :root {
     --bg: #07090c;
@@ -41,7 +41,7 @@
     padding: 12px 22px; border-bottom: 1px solid var(--line);
     background: linear-gradient(180deg, #0d1117, #07090c);
     position: sticky; top: 0; z-index: 100; }
-  header .brand { display:flex; align-items:baseline; gap: 14px; }
+  header .brand { display:flex; align-items:baseline; gap: 14px; flex-wrap:wrap; }
   header h1 { margin:0; font-size: 14px; font-weight:600; letter-spacing: .18em;
     color: var(--amber); }
   header .live { font-size: 10px; letter-spacing: .15em; color: var(--mut); }
@@ -99,15 +99,16 @@
 
   .grid { display:grid; gap: 10px; }
   .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  @media (max-width: 760px) { .grid-3 { grid-template-columns: 1fr; } }
   .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
 
   .card { background: var(--panel); border: 1px solid var(--line);
-    border-radius: 5px; padding: 12px 14px; transition: border-color 0.3s; }
-  .card.flash { border-color: var(--amber); }
+    border-radius: 5px; padding: 12px 14px; }
   .card h3 { margin: 0 0 4px 0; font-size: 11px; color: var(--mut);
-    font-weight: 500; letter-spacing: .08em; text-transform: uppercase; }
+    font-weight: 500; letter-spacing: .04em; line-height: 1.35;
+    display:flex; gap:6px; align-items:flex-start; justify-content:space-between; }
+  .card h3 .qtxt { color: var(--fg); font-size: 12px; font-weight:500;
+    text-transform:none; letter-spacing:0; flex: 1; }
   .card .yes { font-size: 24px; font-weight: 700; color: var(--amber);
     font-variant-numeric: tabular-nums; }
   .card .yes.up { color: var(--green); }
@@ -122,6 +123,10 @@
     letter-spacing: .12em; text-transform: uppercase; }
   td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
   td.q { color: var(--fg); }
+  td.star { width: 26px; text-align: center; cursor: pointer; user-select: none; }
+  td.star span { color: var(--mut); font-size: 14px; transition: color 0.15s, transform 0.15s; display:inline-block; }
+  td.star span.on { color: var(--amber); }
+  td.star:hover span { transform: scale(1.18); color: var(--amber); }
   tr:hover td { background: var(--panel2); }
   tr.flash-up td { animation: flashGreen 1.2s; }
   tr.flash-down td { animation: flashRed 1.2s; }
@@ -135,19 +140,7 @@
   .pill-green { background: rgba(34,197,94,.12); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
   .pill-red { background: rgba(239,68,68,.12); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
   .pill-blue { background: rgba(56,189,248,.12); color: var(--blue); border: 1px solid rgba(56,189,248,.3); }
-
-  .news-item { display:grid; grid-template-columns: 100px 110px 1fr;
-    gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line);
-    font-size: 11.5px; }
-  .news-item .when { color: var(--mut); }
-  .news-item .src { color: var(--blue); }
-  .news-item .title { color: var(--fg); }
-
-  .signal { padding: 7px 11px; border-radius: 4px; margin-top: 8px;
-    font-size: 11.5px; }
-  .signal-ok { background: rgba(34,197,94,.07); border: 1px solid rgba(34,197,94,.25); color: var(--green); }
-  .signal-warn { background: rgba(245,165,36,.07); border: 1px solid rgba(245,165,36,.25); color: var(--amber); }
-  .signal-alert { background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.25); color: var(--red); }
+  .pill-violet { background: rgba(167,139,250,.12); color: var(--violet); border: 1px solid rgba(167,139,250,.3); }
 
   .event-row { display:grid; grid-template-columns: 36px 1fr auto;
     gap: 11px; align-items: center; padding: 9px 12px;
@@ -160,16 +153,29 @@
   .event-row .vol { color: var(--amber); font-size: 12px; font-weight: 600;
     font-variant-numeric: tabular-nums; }
 
-  .tabs { display:flex; gap:0; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .tabs { display:flex; gap:0; margin-bottom: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
   .tab { padding: 8px 16px; cursor: pointer; font-size: 11px; letter-spacing: .12em;
     color: var(--mut); border-bottom: 2px solid transparent; }
   .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
   .tab:hover { color: var(--fg); }
+  .tab .badge { display:inline-block; min-width: 16px; height:16px; padding: 0 5px;
+    border-radius: 9999px; font-size: 9.5px; line-height: 16px; text-align:center;
+    background: var(--panel2); color: var(--fg); margin-left: 6px;
+    font-variant-numeric: tabular-nums; }
+  .tab.active .badge { background: var(--amber); color: var(--bg); }
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
+  .empty-state { padding: 40px 20px; text-align:center; color: var(--mut); }
+  .empty-state h3 { color: var(--fg); margin: 0 0 8px 0; font-weight: 500; font-size: 14px; }
+  .empty-state p { margin: 6px 0; font-size: 12px; }
+  .empty-state code { background: var(--panel2); padding: 2px 6px; border-radius: 3px; color: var(--amber); }
+
   .loading { color: var(--mut); font-style: italic; padding: 14px; text-align: center; }
   .err { color: var(--red); }
+
+  .copy-link { font-size: 10px; color: var(--mut); cursor: pointer; }
+  .copy-link:hover { color: var(--amber); }
 </style>
 </head>
 <body>
@@ -181,6 +187,7 @@
     <h1>POLYMARKET DESK</h1>
     <span class="live" id="live"><span class="dot"></span>OFFLINE</span>
     <span class="meta" id="meta">connecting…</span>
+    <span class="copy-link" id="share">📋 share watchlist</span>
   </div>
   <div style="display:flex; gap:10px; align-items:center;">
     <span class="meta" id="poll-info">poll · 5s</span>
@@ -191,14 +198,30 @@
 <main>
 
 <div class="tabs">
-  <div class="tab active" data-tab="trending">TRENDING</div>
+  <div class="tab active" data-tab="watchlist">WATCHLIST <span class="badge" id="wl-count">0</span></div>
+  <div class="tab" data-tab="trending">TRENDING</div>
+  <div class="tab" data-tab="value">VALUE PLAYS</div>
   <div class="tab" data-tab="screens">SCREENS</div>
-  <div class="tab" data-tab="rocha">ROCHA WATCH</div>
-  <div class="tab" data-tab="news">NEWS</div>
+</div>
+
+<!-- WATCHLIST TAB (default) -->
+<div class="tab-pane active" data-pane="watchlist">
+  <section>
+    <div class="section-title">
+      <h2>YOUR WATCHLIST</h2>
+      <span class="sub">live · synced via your token</span>
+    </div>
+    <div id="wl-grid" class="grid grid-3"></div>
+    <div id="wl-empty" class="empty-state" style="display:none;">
+      <h3>Tu watchlist está vacía</h3>
+      <p>Marca <span style="color:var(--amber); font-size:14px;">☆</span> en cualquier mercado de TRENDING, VALUE PLAYS o SCREENS para agregarlo aquí.</p>
+      <p>Tu watchlist se sincroniza entre dispositivos. Comparte el link <code>📋 share watchlist</code> para ver la misma lista en tu teléfono.</p>
+    </div>
+  </section>
 </div>
 
 <!-- TRENDING TAB -->
-<div class="tab-pane active" data-pane="trending">
+<div class="tab-pane" data-pane="trending">
 
   <section>
     <div class="section-title">
@@ -215,9 +238,9 @@
     </div>
     <table id="mv-tbl">
       <thead><tr>
-        <th>Δ24H</th><th>YES</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
+        <th></th><th>Δ24H</th><th>YES</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
       </tr></thead>
-      <tbody><tr><td colspan="5" class="loading">connecting…</td></tr></tbody>
+      <tbody><tr><td colspan="6" class="loading">connecting…</td></tr></tbody>
     </table>
   </section>
 
@@ -228,12 +251,31 @@
     </div>
     <table id="trending-tbl">
       <thead><tr>
-        <th>VOL 24H</th><th>YES</th><th>Δ24H</th><th>END</th><th>QUESTION</th>
+        <th></th><th>VOL 24H</th><th>YES</th><th>Δ24H</th><th>END</th><th>QUESTION</th>
       </tr></thead>
-      <tbody><tr><td colspan="5" class="loading">connecting…</td></tr></tbody>
+      <tbody><tr><td colspan="6" class="loading">connecting…</td></tr></tbody>
     </table>
   </section>
 
+</div>
+
+<!-- VALUE PLAYS TAB -->
+<div class="tab-pane" data-pane="value">
+  <section>
+    <div class="section-title">
+      <h2>VALUE PLAYS</h2>
+      <span class="sub">extreme prices + active flow + medium horizon (heuristic auto-screen)</span>
+    </div>
+    <table id="vp-tbl">
+      <thead><tr>
+        <th></th><th>SCORE</th><th>YES</th><th>Δ24H</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
+      </tr></thead>
+      <tbody><tr><td colspan="7" class="loading">connecting…</td></tr></tbody>
+    </table>
+    <p style="color:var(--mut); font-size:10.5px; margin-top:8px;">
+      Score = extremity × log(liquidity) × (1 + movement). High score = market is making a strong call (extreme price) with money behind it. Your edge: a contrarian view backed by analysis.
+    </p>
+  </section>
 </div>
 
 <!-- SCREENS TAB -->
@@ -241,14 +283,14 @@
 
   <section>
     <div class="section-title">
-      <h2>HIGH-CONVICTION SCREEN</h2>
+      <h2>HIGH-CONVICTION</h2>
       <span class="sub">YES 70-97%, end ≤60d, vol24h ≥ $20k</span>
     </div>
     <table id="hc-tbl">
       <thead><tr>
-        <th>YES</th><th>Δ24H</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
+        <th></th><th>YES</th><th>Δ24H</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
       </tr></thead>
-      <tbody><tr><td colspan="5" class="loading">connecting…</td></tr></tbody>
+      <tbody><tr><td colspan="6" class="loading">connecting…</td></tr></tbody>
     </table>
   </section>
 
@@ -259,48 +301,10 @@
     </div>
     <table id="fl-tbl">
       <thead><tr>
-        <th>VOL 24H</th><th>YES</th><th>END</th><th>QUESTION</th>
+        <th></th><th>VOL 24H</th><th>YES</th><th>END</th><th>QUESTION</th>
       </tr></thead>
-      <tbody><tr><td colspan="4" class="loading">connecting…</td></tr></tbody>
+      <tbody><tr><td colspan="5" class="loading">connecting…</td></tr></tbody>
     </table>
-  </section>
-
-</div>
-
-<!-- ROCHA WATCH TAB -->
-<div class="tab-pane" data-pane="rocha">
-
-  <section>
-    <div class="section-title">
-      <h2>ROCHA CONTRACTS</h2>
-      <span class="sub">live · vs analyst fair value</span>
-    </div>
-    <div class="grid grid-3" id="rocha-grid">
-      <div class="loading">connecting…</div>
-    </div>
-    <div id="signal-box"></div>
-  </section>
-
-  <section>
-    <div class="section-title">
-      <h2>HISTORICAL · ROCHA EXTRADITION YES</h2>
-      <span class="sub">daily 09:00 CST snapshots</span>
-    </div>
-    <div id="hist-chart" style="height: 200px; background:var(--panel); border:1px solid var(--line); border-radius:5px;"></div>
-    <div class="meta" id="hist-meta" style="margin-top:6px; color: var(--mut); font-size:11px;">loading…</div>
-  </section>
-
-</div>
-
-<!-- NEWS TAB -->
-<div class="tab-pane" data-pane="news">
-
-  <section>
-    <div class="section-title">
-      <h2>NEWS · ROCHA MOYA</h2>
-      <span class="sub">Google News · last 28h</span>
-    </div>
-    <div id="news-list" class="loading">connecting…</div>
   </section>
 
 </div>
@@ -333,72 +337,90 @@ const fmt = {
     return '$'+v.toFixed(0);
   },
   days(d) { return d == null ? '—' : d+'d'; },
-  ts(s) {
-    const dt = new Date(s);
-    return dt.toLocaleString([], {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  },
 };
 const escapeHtml = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 //======================================================================
-// state cache (for diff detection / animations)
+// user identity (UUID in localStorage, or ?u= in URL)
 //======================================================================
-const ROCHA_LABELS = {
-  extr_jun30: 'Extr by Jun 30',
-  arr_may31: 'Arrest by May 31',
-  out_may31: 'Out as Gov May 31',
-};
-let prevRocha = {};
-let prevTradesIds = new Set();
-let prevMarkerByQ = new Map(); // question -> last yes
-let lastTabRendered = 'trending';
+function ensureToken() {
+  const url = new URL(window.location.href);
+  let t = url.searchParams.get('u');
+  if (t) {
+    localStorage.setItem('polydash_user', t);
+    url.searchParams.delete('u');
+    history.replaceState({}, '', url.toString());
+    return t;
+  }
+  t = localStorage.getItem('polydash_user');
+  if (!t) {
+    t = (crypto.randomUUID && crypto.randomUUID()) ||
+        ('u_' + Math.random().toString(36).slice(2) + Date.now().toString(36));
+    localStorage.setItem('polydash_user', t);
+  }
+  return t;
+}
+const USER_TOKEN = ensureToken();
 
 //======================================================================
-// polling connection (Vercel serverless — no SSE)
+// state cache (for animations)
+//======================================================================
+let prevTradesIds = new Set();
+let prevMarkerByQ = new Map();
+let watchlistSlugs = new Set();
+
+//======================================================================
+// share watchlist
+//======================================================================
+document.getElementById('share').addEventListener('click', async () => {
+  const url = new URL(window.location.href);
+  url.searchParams.set('u', USER_TOKEN);
+  try {
+    await navigator.clipboard.writeText(url.toString());
+    const el = document.getElementById('share');
+    const orig = el.textContent;
+    el.textContent = '✓ link copied';
+    setTimeout(() => { el.textContent = orig; }, 1500);
+  } catch (e) {
+    prompt('Copia este link:', url.toString());
+  }
+});
+
+//======================================================================
+// polling
 //======================================================================
 const live = document.getElementById('live');
 const meta = document.getElementById('meta');
-
 const POLL_MS = 5000;
-let pollTimer = null;
-let pollInflight = false;
-let consecutiveFails = 0;
+let pollTimer = null, pollInflight = false;
 
 async function poll() {
   if (pollInflight) return;
   pollInflight = true;
   try {
-    const r = await fetch('/api/state', {cache:'no-store'});
+    const r = await fetch('/api/state?u=' + encodeURIComponent(USER_TOKEN), {cache:'no-store'});
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     render(data);
-    consecutiveFails = 0;
     live.classList.add('connected');
     live.querySelector('.dot').nextSibling.textContent = 'LIVE';
   } catch(e) {
-    consecutiveFails++;
     live.classList.remove('connected');
-    live.querySelector('.dot').nextSibling.textContent = 'OFFLINE (' + consecutiveFails + ')';
+    live.querySelector('.dot').nextSibling.textContent = 'OFFLINE';
     console.warn('poll fail', e);
   } finally {
     pollInflight = false;
   }
 }
-
 function startPolling() {
   poll();
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(poll, POLL_MS);
 }
-
 document.getElementById('refresh').addEventListener('click', poll);
-// pause polling when tab is hidden, resume on focus
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    if (pollTimer) clearInterval(pollTimer); pollTimer = null;
-  } else {
-    startPolling();
-  }
+  if (document.hidden) { if (pollTimer) clearInterval(pollTimer); pollTimer = null; }
+  else startPolling();
 });
 
 //======================================================================
@@ -410,10 +432,64 @@ document.querySelectorAll('.tab').forEach(t => {
     document.querySelectorAll('.tab-pane').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
     document.querySelector(`[data-pane="${t.dataset.tab}"]`).classList.add('active');
-    lastTabRendered = t.dataset.tab;
-    if (t.dataset.tab === 'rocha') loadHistory();
   });
 });
+
+//======================================================================
+// star toggle
+//======================================================================
+async function toggleStar(slug) {
+  if (!slug) return;
+  const isOn = watchlistSlugs.has(slug);
+  if (isOn) watchlistSlugs.delete(slug);
+  else watchlistSlugs.add(slug);
+  updateAllStars();
+  updateBadge();
+  try {
+    const url = '/api/watchlist?u=' + encodeURIComponent(USER_TOKEN) +
+      (isOn ? '&slug=' + encodeURIComponent(slug) : '');
+    const opts = isOn
+      ? { method: 'DELETE' }
+      : { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({slug}) };
+    const r = await fetch(url, opts);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const d = await r.json();
+    if (d.slugs && Array.isArray(d.slugs)) {
+      watchlistSlugs = new Set(d.slugs);
+      updateAllStars();
+      updateBadge();
+      poll();
+    }
+  } catch(e) {
+    if (isOn) watchlistSlugs.add(slug); else watchlistSlugs.delete(slug);
+    updateAllStars();
+    updateBadge();
+    alert('Watchlist sync failed: ' + e);
+  }
+}
+window.toggleStar = toggleStar;
+
+function updateAllStars() {
+  document.querySelectorAll('td.star[data-slug]').forEach(el => {
+    const on = watchlistSlugs.has(el.dataset.slug);
+    const span = el.querySelector('span');
+    if (span) {
+      span.textContent = on ? '★' : '☆';
+      span.classList.toggle('on', on);
+    }
+  });
+}
+
+function updateBadge() {
+  document.getElementById('wl-count').textContent = watchlistSlugs.size;
+}
+
+function starCell(slug) {
+  if (!slug) return '<td></td>';
+  const on = watchlistSlugs.has(slug);
+  const slugEsc = escapeHtml(slug);
+  return `<td class="star" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')"><span class="${on?'on':''}">${on?'★':'☆'}</span></td>`;
+}
 
 //======================================================================
 // render
@@ -421,63 +497,53 @@ document.querySelectorAll('.tab').forEach(t => {
 function render(s) {
   if (s.ts) meta.textContent = 'last upd · ' + new Date(s.ts).toLocaleTimeString();
 
-  if (s.rocha) renderRocha(s.rocha);
+  if (s.watchlist) {
+    watchlistSlugs = new Set(s.watchlist.map(m => m.slug).filter(Boolean));
+    updateBadge();
+  }
+
+  if (s.watchlist) renderWatchlist(s.watchlist);
   if (s.events) renderEvents(s.events);
   if (s.top_movers) renderMovers('mv-tbl', s.top_movers);
-  if (s.trending_markets) renderTrendingMarkets(s.trending_markets);
+  if (s.trending_markets) renderTrending(s.trending_markets);
+  if (s.value_plays) renderValuePlays(s.value_plays);
   if (s.high_conv) renderHC(s.high_conv);
   if (s.top_flow) renderFlow(s.top_flow);
   if (s.trades) renderTape(s.trades);
-  if (s.news) renderNews(s.news);
+
+  updateAllStars();
 }
 
-function renderRocha(rocha) {
-  const grid = document.getElementById('rocha-grid');
-  const html = [];
-  Object.entries(ROCHA_LABELS).forEach(([k,label]) => {
-    const m = rocha[k];
-    if (!m) {
-      html.push(`<div class="card"><h3>${label}</h3><div class="err">fetch fail</div></div>`);
-      return;
-    }
-    const prev = prevRocha[k];
-    let dCls = '', dHtml = '';
-    if (prev != null) {
-      const d = (m.yes - prev.yes)*100;
-      if (Math.abs(d) > 0.001) {
-        dCls = d > 0 ? 'up' : 'down';
-        dHtml = `<span class="${d>0?'pos':'neg'}">${d>0?'▲':'▼'} ${Math.abs(d).toFixed(2)}pp</span>`;
-      }
-    }
-    let edgeHtml = '';
-    if (m.fair_yes != null) {
-      const edge = (m.yes - m.fair_yes)*100;
-      const cls = edge > 0 ? 'pill-red' : 'pill-green';
-      edgeHtml = `<span class="pill ${cls}" style="margin-left:6px;">edge ${edge>0?'+':''}${edge.toFixed(1)}pp</span>`;
-    }
-    html.push(`
-      <div class="card">
-        <h3>${label}${edgeHtml}</h3>
-        <div class="yes ${dCls}">${fmt.pct(m.yes)}</div>
-        <div style="font-size:11px; color:var(--mut); min-height:14px;">${dHtml}</div>
-        <div class="row"><span>BID/ASK</span><span>${fmt.pct(m.best_bid)} / ${fmt.pct(m.best_ask)}</span></div>
-        <div class="row"><span>FAIR (DESK)</span><span>${m.fair_yes != null ? fmt.pct(m.fair_yes) : '—'}</span></div>
-        <div class="row"><span>VOL</span><span>${fmt.vol(m.volume)}</span></div>
-        <div class="row"><span>END</span><span>${(m.end_date||'').slice(0,10)}</span></div>
-      </div>`);
-    prevRocha[k] = m;
-  });
-  grid.innerHTML = html.join('');
-
-  const extr = rocha.extr_jun30;
-  const sigBox = document.getElementById('signal-box');
-  if (extr) {
-    let cls='signal-ok', txt='';
-    if (extr.yes > 0.45) { cls='signal-alert'; txt = `SIGNAL · YES ${fmt.pct(extr.yes)} > 45% — re-evaluate thesis (catalyst likely)`; }
-    else if (extr.yes < 0.10) { cls='signal-warn'; txt = `SIGNAL · YES ${fmt.pct(extr.yes)} < 10% — short edge eroded, consider close`; }
-    else { txt = `SIGNAL · SHORT YES intact (mkt ${fmt.pct(extr.yes)} vs fair ${fmt.pct(extr.fair_yes)})`; }
-    sigBox.innerHTML = `<div class="signal ${cls}">${txt}</div>`;
+function renderWatchlist(wl) {
+  const grid = document.getElementById('wl-grid');
+  const empty = document.getElementById('wl-empty');
+  if (!wl || wl.length === 0) {
+    grid.innerHTML = '';
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    return;
   }
+  empty.style.display = 'none';
+  grid.style.display = '';
+  grid.innerHTML = wl.map(m => {
+    const c = (m.one_day_change || 0) * 100;
+    const cls = c > 0 ? 'up' : (c < 0 ? 'down' : '');
+    const cpill = c > 0 ? 'pill-green' : (c < 0 ? 'pill-red' : 'pill-amber');
+    const sign = c > 0 ? '+' : '';
+    const days = m.days != null ? m.days + 'd' : '—';
+    const slugEsc = escapeHtml(m.slug || '');
+    return `<div class="card">
+      <h3>
+        <span class="qtxt">${escapeHtml(m.question || '')}</span>
+        <span class="star-card" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')" style="cursor:pointer; font-size:16px; color:var(--amber);">★</span>
+      </h3>
+      <div class="yes ${cls}">${fmt.pct(m.yes)}</div>
+      <div style="margin-top:4px;"><span class="pill ${cpill}">${sign}${c.toFixed(1)}pp 24h</span></div>
+      <div class="row"><span>BID/ASK</span><span>${fmt.pct(m.best_bid)} / ${fmt.pct(m.best_ask)}</span></div>
+      <div class="row"><span>VOL 24H</span><span>${fmt.vol(m.vol24h)}</span></div>
+      <div class="row"><span>END</span><span>${days}</span></div>
+    </div>`;
+  }).join('');
 }
 
 function renderEvents(events) {
@@ -500,11 +566,12 @@ function renderEvents(events) {
 
 function renderMovers(id, rows) {
   const tbody = document.querySelector('#'+id+' tbody');
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="loading">none</td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="loading">none</td></tr>'; return; }
   tbody.innerHTML = rows.map(r => {
     const c = r.one_day_change*100;
     const cls = c > 0 ? 'pos' : 'neg';
     return `<tr>
+      ${starCell(r.slug)}
       <td class="num ${cls}">${c>0?'+':''}${c.toFixed(1)}pp</td>
       <td class="num">${fmt.pct(r.yes)}</td>
       <td class="num">${fmt.days(r.days)}</td>
@@ -514,19 +581,20 @@ function renderMovers(id, rows) {
   }).join('');
 }
 
-function renderTrendingMarkets(rows) {
+function renderTrending(rows) {
   const tbody = document.querySelector('#trending-tbl tbody');
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="loading">none</td></tr>'; return; }
-  const newHtml = rows.map(r => {
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="loading">none</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => {
     const c = r.one_day_change*100;
     const ccls = c > 0 ? 'pos' : (c < 0 ? 'neg' : '');
-    const prevYes = prevMarkerByQ.get(r.question);
+    const prevYes = prevMarkerByQ.get(r.slug);
     let flashCls = '';
     if (prevYes != null && Math.abs(prevYes - r.yes) > 0.001) {
       flashCls = (r.yes > prevYes) ? 'flash-up' : 'flash-down';
     }
-    prevMarkerByQ.set(r.question, r.yes);
+    prevMarkerByQ.set(r.slug, r.yes);
     return `<tr class="${flashCls}">
+      ${starCell(r.slug)}
       <td class="num">${fmt.vol(r.vol24h)}</td>
       <td class="num">${fmt.pct(r.yes)}</td>
       <td class="num ${ccls}">${c>0?'+':''}${c.toFixed(1)}pp</td>
@@ -534,16 +602,34 @@ function renderTrendingMarkets(rows) {
       <td class="q">${escapeHtml(r.question)}</td>
     </tr>`;
   }).join('');
-  tbody.innerHTML = newHtml;
 }
 
-function renderHC(rows) {
-  const tbody = document.querySelector('#hc-tbl tbody');
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="loading">none match</td></tr>'; return; }
+function renderValuePlays(rows) {
+  const tbody = document.querySelector('#vp-tbl tbody');
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="7" class="loading">no markets meet the filter right now</td></tr>'; return; }
   tbody.innerHTML = rows.map(r => {
     const c = r.one_day_change*100;
     const ccls = c > 0 ? 'pos' : (c < 0 ? 'neg' : '');
     return `<tr>
+      ${starCell(r.slug)}
+      <td class="num"><span class="pill pill-violet">${(r.value_score || 0).toFixed(2)}</span></td>
+      <td class="num">${fmt.pct(r.yes)}</td>
+      <td class="num ${ccls}">${c>0?'+':''}${c.toFixed(1)}pp</td>
+      <td class="num">${fmt.days(r.days)}</td>
+      <td class="num">${fmt.vol(r.vol24h)}</td>
+      <td class="q">${escapeHtml(r.question)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHC(rows) {
+  const tbody = document.querySelector('#hc-tbl tbody');
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="6" class="loading">none match</td></tr>'; return; }
+  tbody.innerHTML = rows.map(r => {
+    const c = r.one_day_change*100;
+    const ccls = c > 0 ? 'pos' : (c < 0 ? 'neg' : '');
+    return `<tr>
+      ${starCell(r.slug)}
       <td class="num">${fmt.pct(r.yes)}</td>
       <td class="num ${ccls}">${c>0?'+':''}${c.toFixed(1)}pp</td>
       <td class="num">${fmt.days(r.days)}</td>
@@ -555,9 +641,10 @@ function renderHC(rows) {
 
 function renderFlow(rows) {
   const tbody = document.querySelector('#fl-tbl tbody');
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="loading">none</td></tr>'; return; }
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" class="loading">none</td></tr>'; return; }
   tbody.innerHTML = rows.map(r =>
     `<tr>
+      ${starCell(r.slug)}
       <td class="num">${fmt.vol(r.vol24h)}</td>
       <td class="num">${fmt.pct(r.yes)}</td>
       <td class="num">${fmt.days(r.days)}</td>
@@ -566,25 +653,11 @@ function renderFlow(rows) {
   ).join('');
 }
 
-function renderNews(news) {
-  const wrap = document.getElementById('news-list');
-  if (!news.length) { wrap.innerHTML = '<div class="loading">no fresh items</div>'; return; }
-  wrap.innerHTML = news.map(n => {
-    const dt = new Date(n.pub);
-    const stamp = dt.toLocaleString([], {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    return `<div class="news-item">
-      <span class="when">${stamp}</span>
-      <span class="src">${escapeHtml(n.source||'—')}</span>
-      <span class="title">${escapeHtml(n.title)}</span>
-    </div>`;
-  }).join('');
-}
-
 function renderTape(trades) {
   const wrap = document.getElementById('tape-list');
-  const meta = document.getElementById('tape-meta');
+  const tmeta = document.getElementById('tape-meta');
   if (!trades.length) { wrap.innerHTML = '<div class="loading">no trades</div>'; return; }
-  meta.textContent = `${trades.length} trades`;
+  tmeta.textContent = `${trades.length} trades`;
   const ids = new Set();
   wrap.innerHTML = trades.map(t => {
     const id = `${t.ts}-${t.slug}-${t.side}-${t.size}-${t.price}`;
@@ -604,43 +677,7 @@ function renderTape(trades) {
   prevTradesIds = ids;
 }
 
-//======================================================================
-// historical (Rocha snapshots)
-//======================================================================
-async function loadHistory() {
-  // /api/history not provided on Vercel deploy. No-op.
-  return;
-  try {
-    const r = await fetch('/api/history', {cache:'no-store'});
-    const arr = await r.json();
-    const meta = document.getElementById('hist-meta');
-    if (!arr.length) { meta.textContent = 'no historical snapshots yet — first appears after next 09:00 CST run.'; return; }
-    const series = arr.map(a => ({date: a.date, yes: ((a.data||{}).extr_jun30||{}).yes})).filter(p => p.yes != null);
-    if (!series.length) { meta.textContent = 'snapshots present but no extr_jun30 data.'; return; }
-    const w = document.getElementById('hist-chart').clientWidth || 800;
-    const h = 200, pad = 36;
-    const minY = Math.min(...series.map(p=>p.yes), 0);
-    const maxY = Math.max(...series.map(p=>p.yes), 0.5);
-    const xs = i => pad + (i/Math.max(1,series.length-1))*(w-pad*2);
-    const ys = y => h-pad - ((y-minY)/Math.max(0.001,maxY-minY))*(h-pad*2);
-    const path = series.map((p,i)=>(i?'L':'M')+xs(i).toFixed(1)+','+ys(p.yes).toFixed(1)).join(' ');
-    const dots = series.map((p,i)=>`<circle cx="${xs(i)}" cy="${ys(p.yes)}" r="3" fill="#f5a524"/>`).join('');
-    const labels = series.map((p,i)=>`<text x="${xs(i)}" y="${h-10}" fill="#71717a" font-size="9" text-anchor="middle" font-family="ui-monospace">${p.date.slice(5)}</text>`).join('');
-    const yLabels = [minY,(minY+maxY)/2,maxY].map(v=>`<text x="4" y="${ys(v)+3}" fill="#71717a" font-size="9" font-family="ui-monospace">${(v*100).toFixed(0)}%</text>`).join('');
-    document.getElementById('hist-chart').innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}">
-      ${yLabels}
-      <path d="${path}" stroke="#f5a524" stroke-width="2" fill="none"/>
-      ${dots}${labels}
-    </svg>`;
-    meta.textContent = `${series.length} snap${series.length>1?'s':''} · last ${series[series.length-1].date} · YES ${fmt.pct(series[series.length-1].yes)}`;
-  } catch(e) {
-    document.getElementById('hist-meta').innerHTML = `<span class="err">${e}</span>`;
-  }
-}
-
 startPolling();
-// no historical snapshots in serverless deploy — local launchd writes them on the host Mac
-document.getElementById('hist-meta').textContent = 'historical snapshots only available on the local launchd-driven instance';
 </script>
 </body>
 </html>
