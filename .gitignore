@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+*.egg-info/
+
+# Logs and runtime data
+logs/
+snapshots/
+*.log
+
+# Vercel project linkage / auth
+.vercel/
+
+# Real (non-example) plist with phone number — keep .example only
+com.ghostcat.rocha-tracker.plist
+
+# Editors
+.vscode/
+.idea/
+*.swp

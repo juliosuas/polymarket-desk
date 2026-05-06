@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.ghostcat.rocha-dashboard</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/opt/homebrew/bin/python3</string>
+        <string>/Users/ghostcat/polymarket_rocha_extradition/server.py</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/ghostcat/polymarket_rocha_extradition</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>DASH_PORT</key>
+        <string>7878</string>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/ghostcat/polymarket_rocha_extradition/logs/server.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/ghostcat/polymarket_rocha_extradition/logs/server.err.log</string>
+</dict>
+</plist>
