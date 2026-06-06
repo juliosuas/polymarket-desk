@@ -1,98 +1,189 @@
-# polymarket-desk
+# Polymarket Desk
 
-A Bloomberg-terminal-styled dashboard for Polymarket. Live trending markets, top movers, value plays auto-screen, and a synced personal watchlist. Read-only by design — no trading, no keys.
+Polymarket Desk is a real-time market intelligence dashboard for Polymarket. It surfaces high-flow markets, top movers, heuristic value screens, a live trade tape, and a shareable watchlist in a fast terminal-style interface.
+
+The project is intentionally read-only: it does not place orders, connect wallets, or require private Polymarket credentials.
+
+## Live Demo
+
+Production: [https://polymarket-desk-seven.vercel.app](https://polymarket-desk-seven.vercel.app)
+
+## Screenshots
+
+### Desktop
+
+![Polymarket Desk desktop dashboard](docs/screenshots/dashboard-markets.png)
+
+### Mobile
+
+![Polymarket Desk mobile dashboard](docs/screenshots/dashboard-mobile.png)
 
 ## Features
 
-- **Watchlist** — star any market, syncs across devices via a per-user token
-- **Trending** — top events by 24h volume, top movers, top markets
-- **Value Plays** — heuristic auto-screen that surfaces extreme prices with active flow
-- **Screens** — high-conviction (YES 70-97%, ending soon) + top flow
-- **Live Tape** — last 30 trades platform-wide, flashing on each new fill
-- **Real-time-ish** — 5s polling with edge-cached responses
+- Market dashboard with consensus markets, 24h catalysts, trending events, top movers, and top-flow screens.
+- Value Plays screen that ranks extreme-price markets with meaningful recent volume.
+- Live trade tape polling the latest public Polymarket trades.
+- Shareable watchlist backed by Vercel KV.
+- No build step: vanilla HTML, CSS, and JavaScript served by Vercel.
+- Python serverless API functions for data aggregation and watchlist persistence.
+- Public-data only: no wallet, no trading keys, no private Polymarket authentication.
 
-## Stack
+## Architecture
 
-- Python serverless functions on Vercel (`api/state.py`, `api/watchlist.py`)
-- Vercel KV (Redis) for watchlist persistence
-- Vanilla JS / HTML / CSS dashboard (`public/index.html`) — no build step
-- Polymarket Gamma + data-api endpoints (public, unauthenticated)
-
-## Layout
-
-```
+```text
 .
-├── api/
-│   ├── state.py        # combined Polymarket fetcher (parallel)
-│   └── watchlist.py    # KV CRUD: GET/POST/DELETE /api/watchlist?u=<token>
-├── public/
-│   └── index.html      # SPA dashboard
-├── vercel.json         # functions + headers config
-└── README.md
+|-- api/
+|   |-- state.py        # Aggregates Polymarket markets, events, trades, and watchlist
+|   `-- watchlist.py    # Watchlist CRUD using Vercel KV / Upstash Redis
+|-- docs/
+|   `-- screenshots/    # README screenshots
+|-- public/
+|   `-- index.html      # Single-page dashboard
+|-- vercel.json         # Rewrites, CORS headers, and function limits
+`-- README.md
 ```
 
-## How identity works
+## Data Sources
 
-No login. Each browser generates a UUID v4 and stores it in `localStorage['polydash_user']`. Every API call appends `?u=<uuid>`. To use the same watchlist on another device, click **share watchlist** in the header — it copies a URL with your token. Open that URL on the other device once and the token is adopted.
+Polymarket Desk uses public unauthenticated endpoints:
 
-## Data sources
+- `https://gamma-api.polymarket.com/markets`
+- `https://gamma-api.polymarket.com/events`
+- `https://data-api.polymarket.com/trades`
 
-- `https://gamma-api.polymarket.com/markets` — market list, prices, volumes
-- `https://gamma-api.polymarket.com/events` — events with grouped sub-markets
-- `https://data-api.polymarket.com/trades` — recent trade tape
+The API layer normalizes these responses into a single `/api/state` payload used by the browser.
 
-## Local development
+## API
+
+### `GET /api/state`
+
+Returns combined dashboard state.
+
+Optional query parameter:
+
+- `u`: user token used to resolve the watchlist.
+
+Representative response fields:
+
+- `ts`: API response timestamp.
+- `safest`: high-consensus near-term markets.
+- `today_movers`: large 24h price movers with volume.
+- `trending_markets`: top individual markets by 24h volume.
+- `events`: top grouped events by 24h volume.
+- `value_plays`: heuristic extreme-price screen.
+- `high_conv`: high-conviction screen.
+- `top_flow`: top liquid markets.
+- `trades`: latest public trade tape.
+- `watchlist`: resolved watchlist markets when `u` is provided.
+
+### `GET /api/watchlist?u=<token>`
+
+Returns the saved watchlist slugs for a user token.
+
+### `POST /api/watchlist?u=<token>`
+
+Adds a slug to the watchlist.
+
+```json
+{ "slug": "example-market-slug" }
+```
+
+### `DELETE /api/watchlist?u=<token>&slug=<slug>`
+
+Removes a slug from the watchlist.
+
+## User Identity Model
+
+There is no login system. On first load, the browser generates a UUID and stores it in:
+
+```text
+localStorage["polydash_user"]
+```
+
+That token is sent as `?u=<token>` to the API. The "share watchlist" action copies a URL containing the token, which allows another browser/device to adopt the same watchlist.
+
+Treat watchlist links as editable private links. Anyone with the token can view and modify that watchlist.
+
+## Value Plays Scoring
+
+The value screen ranks markets with extreme implied prices, meaningful volume, and a medium-term horizon.
+
+```text
+score = extremity * log(liquidity) * (1 + movement)
+```
+
+The screen is a discovery tool, not a trading recommendation. It highlights candidates for further research.
+
+## Local Development
+
+Prerequisites:
+
+- Vercel CLI
+- Python 3.11+
+- Vercel KV / Upstash Redis for watchlist persistence
+
+Clone and run:
 
 ```bash
-# clone
-git clone git@github.com:juliosuas/polymarket-desk.git
+git clone https://github.com/juliosuas/polymarket-desk.git
 cd polymarket-desk
-
-# spin up Vercel-like dev environment
-vercel dev      # auto-installs Python runtime, runs at http://localhost:3000
+vercel dev
 ```
 
-Without Vercel KV configured locally, the `/api/watchlist` endpoints will error and the watchlist tab will be empty — the rest works (trending, value plays, screens, live tape).
+The app will run at:
 
-You can also exercise the data layer in plain Python:
-
-```bash
-python3 -c "import sys; sys.path.insert(0,'api'); import state; print(state.collect()['value_plays'])"
+```text
+http://localhost:3000
 ```
 
-## Production deploy
+Without KV environment variables, market data can still render, but watchlist reads/writes will fail.
 
-Connected to GitHub via Vercel git integration — every push to `main` triggers a build. To deploy manually:
+## Environment Variables
+
+Production expects Vercel KV variables:
+
+```text
+KV_REST_API_URL
+KV_REST_API_TOKEN
+KV_REST_API_READ_ONLY_TOKEN
+```
+
+When Vercel KV is connected through the Vercel dashboard, these are injected automatically.
+
+## Deployment
+
+The project is configured for Vercel.
+
+Current production URL:
+
+```text
+https://polymarket-desk-seven.vercel.app
+```
+
+Manual production deploy:
 
 ```bash
 vercel deploy --prod
 ```
 
-### One-time KV provisioning
+If the GitHub integration is connected, pushes to `main` trigger production deployments automatically.
 
-1. In the Vercel dashboard → Project → Storage → Create → KV (Upstash Redis)
-2. Connect it to this project; Vercel injects `KV_REST_API_URL` + `KV_REST_API_TOKEN` env vars automatically.
-3. Redeploy.
+## Security And Privacy
 
-If env vars are missing, watchlist endpoints return 500 and the dashboard's watchlist tab will be empty (everything else still works).
+- No trading execution or wallet connection is implemented.
+- No Polymarket API keys are required.
+- Watchlist state is keyed by opaque browser tokens.
+- Watchlist share links are bearer-style edit links.
+- `.env*.local` and `.vercel/` are ignored and should not be committed.
 
-## Value Plays scoring
+## Limitations
 
-```
-score = extremity × log10(vol24h/10k) × (1 + |Δ24h|*5)
-```
-
-Filter: YES in [5%, 20%] ∪ [80%, 95%], `vol24h ≥ $30k`, end in 3-90d, sports heads-up excluded.
-
-The premise: extreme prices with active flow are where conviction trades typically live. The market is making a strong call — your edge is having a contrarian view backed by analysis. The screen surfaces candidates; the homework is yours.
-
-## Out of scope
-
-- Trading integration (CLOB orders, wallet connect) — explicitly deferred
-- Daily snapshots / historical sparklines — not implemented in cloud
-- News scraping — removed (was Rocha-specific)
-- iMessage alert tracker — removed (was Rocha-specific)
+- No historical database or backfilled chart storage.
+- No authenticated user accounts.
+- No analytics tracking is currently installed.
+- Watchlists are simple slug arrays capped server-side.
+- Market screens are heuristics and should be independently validated.
 
 ## License
 
-Personal use. Polymarket data is public; don't redistribute commercially. Trading on Polymarket: at your own risk and only where legal in your jurisdiction.
+Personal project. Polymarket data belongs to its respective providers. Trading involves risk and may be restricted by jurisdiction.

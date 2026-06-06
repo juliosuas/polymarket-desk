@@ -76,26 +76,35 @@ EXCLUDE_PATTERNS = [
 
 
 # ---------- HTTP helpers ----------
-def _get_json(url: str, timeout: int = 12, headers: dict | None = None):
+def _get_json(url: str, timeout: int = 6, headers: dict | None = None):
     req = urllib.request.Request(
         url, headers={"User-Agent": "polydash/2.0", **(headers or {})}
     )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read())
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError):
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError, json.JSONDecodeError):
         return None
+
+
+def _safe_float(value, default: float = 0.0) -> float:
+    try:
+        return float(value or default)
+    except (TypeError, ValueError):
+        return default
 
 
 # ---------- Polymarket fetchers ----------
 def fetch_market(slug: str) -> dict | None:
     data = _get_json(f"{GAMMA_MARKETS}?slug={slug}")
-    if not data:
+    if not data or not isinstance(data, list):
         return None
-    m = data[0]
     try:
+        m = data[0]
         prices = json.loads(m.get("outcomePrices") or '["0","0"]')
-    except Exception:
+        yes = float(prices[0])
+        no = float(prices[1])
+    except (IndexError, TypeError, ValueError, json.JSONDecodeError):
         return None
     end_raw = m.get("endDate")
     days = None
@@ -108,15 +117,15 @@ def fetch_market(slug: str) -> dict | None:
     return {
         "slug": slug,
         "question": m.get("question"),
-        "yes": float(prices[0]),
-        "no": float(prices[1]),
-        "last_trade": float(m.get("lastTradePrice") or 0),
-        "best_bid": float(m.get("bestBid") or 0),
-        "best_ask": float(m.get("bestAsk") or 0),
-        "one_day_change": float(m.get("oneDayPriceChange") or 0),
-        "volume": float(m.get("volume") or 0),
-        "vol24h": float(m.get("volume24hr") or 0),
-        "liquidity": float(m.get("liquidity") or 0),
+        "yes": yes,
+        "no": no,
+        "last_trade": _safe_float(m.get("lastTradePrice")),
+        "best_bid": _safe_float(m.get("bestBid")),
+        "best_ask": _safe_float(m.get("bestAsk")),
+        "one_day_change": _safe_float(m.get("oneDayPriceChange")),
+        "volume": _safe_float(m.get("volume")),
+        "vol24h": _safe_float(m.get("volume24hr")),
+        "liquidity": _safe_float(m.get("liquidity")),
         "end_date": end_raw,
         "days": days,
         "image": m.get("icon") or m.get("image"),
@@ -388,7 +397,12 @@ def collect(user_token: str | None = None):
         rows = f_screen.result() or []
         events = f_events.result() or []
         trades = f_trades.result() or []
-        watchlist = f_wl.result() if f_wl else None
+        watchlist = None
+        if f_wl:
+            try:
+                watchlist = f_wl.result() or []
+            except Exception:
+                watchlist = []
 
     payload = {
         "ts": datetime.now(timezone.utc).isoformat(),
@@ -409,6 +423,14 @@ def collect(user_token: str | None = None):
 
 # ---------- Vercel handler ----------
 class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+
     def do_GET(self):
         try:
             qs = urllib.parse.urlparse(self.path).query

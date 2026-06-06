@@ -41,7 +41,7 @@ def _kv_call(method: str, path: str, body: bytes | None = None):
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=10) as r:
+        with urllib.request.urlopen(req, timeout=6) as r:
             raw = r.read()
             return json.loads(raw) if raw else None
     except urllib.error.HTTPError as e:
@@ -121,7 +121,11 @@ class handler(BaseHTTPRequestHandler):
             token = _validate_token((params.get("u") or [None])[0])
             length = int(self.headers.get("Content-Length") or 0)
             raw = self.rfile.read(length) if length else b"{}"
-            data = json.loads(raw) if raw else {}
+            try:
+                data = json.loads(raw) if raw else {}
+            except json.JSONDecodeError:
+                self._send({"error": "invalid JSON body"}, 400)
+                return
             slug = _validate_slug((data or {}).get("slug"))
             existing = kv_get_list(f"wl:{token}")
             if slug not in existing:

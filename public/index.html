@@ -37,7 +37,7 @@
   }
 
   header { grid-column: 1 / -1; display:flex;
-    justify-content:space-between; align-items:center;
+    justify-content:space-between; align-items:center; gap: 12px; flex-wrap: wrap;
     padding: 12px 22px; border-bottom: 1px solid var(--line);
     background: linear-gradient(180deg, #0d1117, #07090c);
     position: sticky; top: 0; z-index: 100; }
@@ -54,7 +54,8 @@
     0%,100% { opacity: 1; }
     50% { opacity: 0.4; }
   }
-  header .meta { color: var(--mut); font-size: 11px; margin-right: 14px; }
+  header .meta { color: var(--mut); font-size: 11px; }
+  header .actions { display:flex; gap:10px; align-items:center; flex-wrap: wrap; justify-content: flex-end; }
   header button { background: var(--panel2); color: var(--fg);
     border: 1px solid var(--line); padding: 6px 14px; cursor: pointer;
     font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
@@ -62,6 +63,12 @@
   header button:hover { border-color: var(--amber); color: var(--amber); }
 
   main { padding: 16px 22px; min-width: 0; }
+  @media (max-width: 640px) {
+    header { padding: 10px 14px; align-items:flex-start; }
+    header .brand { gap: 8px 12px; }
+    header .actions { width: 100%; justify-content: space-between; }
+    main { padding: 12px 14px; }
+  }
   aside.tape { border-left: 1px solid var(--line); background: var(--panel);
     padding: 0; max-height: calc(100vh - 53px); overflow: hidden;
     display:flex; flex-direction: column; position: sticky; top: 53px; }
@@ -96,6 +103,31 @@
   .section-title h2 { margin:0; font-size: 11px; font-weight:600;
     letter-spacing: .18em; color: var(--amber); }
   .section-title .sub { color: var(--mut); font-size: 11px; }
+  @media (max-width: 760px) {
+    .section-title { align-items:flex-start; flex-direction:column; gap: 3px; }
+  }
+
+  .notice { border: 1px solid rgba(245,165,36,.28); background: rgba(245,165,36,.07);
+    color: var(--fg); padding: 10px 12px; margin-bottom: 12px; border-radius: 5px;
+    display:grid; grid-template-columns: auto 1fr; gap: 10px; align-items:start; }
+  .notice strong { color: var(--amber); font-weight: 700; letter-spacing: .12em; font-size: 10px; }
+  .notice span { color: var(--mut); font-size: 11px; }
+
+  .status-alert { border: 1px solid rgba(239,68,68,.35); background: rgba(239,68,68,.08);
+    color: var(--fg); padding: 9px 12px; margin-bottom: 12px; border-radius: 5px;
+    font-size: 11px; }
+  .status-alert[hidden] { display:none; }
+
+  .summary-strip { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px; margin-bottom: 12px; }
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 5px;
+    padding: 10px 11px; min-width: 0; }
+  .stat .label { color: var(--mut); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; }
+  .stat .value { color: var(--fg); font-size: 17px; font-weight: 700; margin-top: 3px;
+    font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stat .value.hot { color: var(--amber); }
+  @media (max-width: 900px) { .summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 460px) { .summary-strip { grid-template-columns: 1fr; } }
 
   .grid { display:grid; gap: 10px; }
   .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -117,16 +149,21 @@
     color: var(--mut); font-size: 10.5px; }
   .card .row span:last-child { color: var(--fg); font-variant-numeric: tabular-nums; }
 
+  .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--line);
+    border-radius: 5px; background: var(--panel); }
+  .table-wrap table { min-width: 760px; }
   table { width:100%; border-collapse: collapse; font-size: 11.5px; }
   th, td { text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--line); }
   th { color: var(--mut); font-weight: 500; font-size: 9.5px;
     letter-spacing: .12em; text-transform: uppercase; }
   td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
   td.q { color: var(--fg); }
-  td.star { width: 26px; text-align: center; cursor: pointer; user-select: none; }
-  td.star span { color: var(--mut); font-size: 14px; transition: color 0.15s, transform 0.15s; display:inline-block; }
-  td.star span.on { color: var(--amber); }
-  td.star:hover span { transform: scale(1.18); color: var(--amber); }
+  td.star { width: 30px; text-align: center; user-select: none; }
+  .star-button { appearance:none; border:0; background:transparent; color: var(--mut);
+    cursor:pointer; font: inherit; font-size: 15px; line-height: 1; padding: 2px 4px;
+    transition: color 0.15s, transform 0.15s; }
+  .star-button.on { color: var(--amber); }
+  .star-button:hover, .star-button:focus-visible { transform: scale(1.15); color: var(--amber); outline: none; }
   tr:hover td { background: var(--panel2); }
   tr.flash-up td { animation: flashGreen 1.2s; }
   tr.flash-down td { animation: flashRed 1.2s; }
@@ -153,11 +190,13 @@
   .event-row .vol { color: var(--amber); font-size: 12px; font-weight: 600;
     font-variant-numeric: tabular-nums; }
 
-  .tabs { display:flex; gap:0; margin-bottom: 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  .tab { padding: 8px 16px; cursor: pointer; font-size: 11px; letter-spacing: .12em;
-    color: var(--mut); border-bottom: 2px solid transparent; }
+  .tabs { display:flex; gap:0; margin-bottom: 12px; border-bottom: 1px solid var(--line);
+    overflow-x: auto; }
+  .tab { appearance:none; background:transparent; border:0; border-bottom: 2px solid transparent;
+    padding: 8px 16px; cursor: pointer; font-family: var(--mono); font-size: 11px;
+    letter-spacing: .12em; color: var(--mut); white-space: nowrap; }
   .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
-  .tab:hover { color: var(--fg); }
+  .tab:hover, .tab:focus-visible { color: var(--fg); outline: none; }
   .tab .badge { display:inline-block; min-width: 16px; height:16px; padding: 0 5px;
     border-radius: 9999px; font-size: 9.5px; line-height: 16px; text-align:center;
     background: var(--panel2); color: var(--fg); margin-left: 6px;
@@ -166,7 +205,7 @@
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
-  /* APUESTAS — recommendation cards */
+  /* Market cards */
   .bet-card { background: var(--panel); border: 1px solid var(--line);
     border-radius: 6px; padding: 14px 16px; display:flex; flex-direction: column;
     gap: 8px; transition: border-color 0.2s; }
@@ -176,10 +215,11 @@
   .bet-card.yours { border-left: 3px solid var(--violet); }
   .bet-card .q { color: var(--fg); font-size: 12.5px; line-height: 1.35;
     display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
-  .bet-card .q .star-card { color: var(--mut); cursor:pointer; font-size: 16px;
-    user-select:none; flex-shrink: 0; transition: color 0.15s, transform 0.15s; }
+  .bet-card .q .star-card { appearance:none; border:0; background:transparent; color: var(--mut);
+    cursor:pointer; font-family: var(--mono); font-size: 16px; line-height: 1;
+    padding: 0; user-select:none; flex-shrink: 0; transition: color 0.15s, transform 0.15s; }
   .bet-card .q .star-card.on { color: var(--amber); }
-  .bet-card .q .star-card:hover { color: var(--amber); transform: scale(1.18); }
+  .bet-card .q .star-card:hover, .bet-card .q .star-card:focus-visible { color: var(--amber); transform: scale(1.18); outline:none; }
   .bet-card .action { display:flex; align-items:baseline; gap: 10px;
     flex-wrap: wrap; }
   .bet-card .verb { color: var(--fg); font-size: 11px; letter-spacing: .12em; }
@@ -211,6 +251,8 @@
 
   .copy-link { font-size: 10px; color: var(--mut); cursor: pointer; }
   .copy-link:hover { color: var(--amber); }
+  .tape-pane .tape-list { border: 1px solid var(--line); border-radius: 5px; background: var(--panel);
+    max-height: 70vh; overflow-y: auto; }
 </style>
 </head>
 <body>
@@ -222,30 +264,61 @@
     <h1>POLYMARKET DESK</h1>
     <span class="live" id="live"><span class="dot"></span>OFFLINE</span>
     <span class="meta" id="meta">connecting…</span>
-    <span class="copy-link" id="share">📋 share watchlist</span>
+    <span class="copy-link" id="share">share/edit watchlist</span>
   </div>
-  <div style="display:flex; gap:10px; align-items:center;">
+  <div class="actions">
     <span class="meta" id="poll-info">poll · 5s</span>
-    <button id="refresh">FORCE FETCH</button>
+    <button id="refresh">REFRESH</button>
   </div>
 </header>
 
 <main>
 
-<div class="tabs">
-  <div class="tab active" data-tab="apuestas">APUESTAS</div>
-  <div class="tab" data-tab="trending">TRENDING</div>
-  <div class="tab" data-tab="value">VALUE PLAYS</div>
-  <div class="tab" data-tab="screens">SCREENS</div>
+<div class="notice">
+  <strong>DATA ONLY</strong>
+  <span>Probabilidades implícitas de mercados públicos. No es asesoría financiera ni instrucción de trading.</span>
 </div>
 
-<!-- APUESTAS TAB (default) — three sections: SEGURAS / HOY / TUYAS -->
+<div id="status-alert" class="status-alert" hidden></div>
+
+<div class="summary-strip" aria-label="Market summary">
+  <div class="stat">
+    <div class="label">top markets</div>
+    <div class="value" id="stat-markets">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">24h flow</div>
+    <div class="value hot" id="stat-flow">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">movers</div>
+    <div class="value" id="stat-movers">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">events</div>
+    <div class="value" id="stat-events">—</div>
+  </div>
+  <div class="stat">
+    <div class="label">watchlist</div>
+    <div class="value" id="stat-watchlist">0</div>
+  </div>
+</div>
+
+<div class="tabs" role="tablist" aria-label="Dashboard sections">
+  <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="apuestas">MERCADOS</button>
+  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="trending">TRENDING</button>
+  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="value">VALUE</button>
+  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="screens">SCREENS</button>
+  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="tape">TAPE</button>
+</div>
+
+<!-- MERCADOS TAB (default) -->
 <div class="tab-pane active" data-pane="apuestas">
 
   <section>
     <div class="section-title">
-      <h2>🟢 LAS MÁS SEGURAS</h2>
-      <span class="sub">95%+ probabilidad implícita · pagos pequeños, alta tasa de aciertos</span>
+      <h2>CONSENSO ALTO</h2>
+      <span class="sub">mercados con precio implícito extremo, liquidez y resolución cercana</span>
     </div>
     <div id="safest-grid" class="grid grid-3"></div>
     <div id="safest-empty" class="empty-state" style="display:none;">
@@ -255,8 +328,8 @@
 
   <section>
     <div class="section-title">
-      <h2>🔥 LO DEL DÍA</h2>
-      <span class="sub">grandes movimientos en las últimas 24h con flujo</span>
+      <h2>CATALIZADORES 24H</h2>
+      <span class="sub">movimientos fuertes con volumen reciente</span>
     </div>
     <div id="today-grid" class="grid grid-3"></div>
     <div id="today-empty" class="empty-state" style="display:none;">
@@ -266,14 +339,14 @@
 
   <section>
     <div class="section-title">
-      <h2>⭐ LAS TUYAS <span class="badge" id="wl-count" style="margin-left:6px;">0</span></h2>
-      <span class="sub">tu watchlist · sincronizada</span>
+      <h2>WATCHLIST <span class="badge" id="wl-count" style="margin-left:6px;">0</span></h2>
+      <span class="sub">tu lista compartible; el enlace permite editarla</span>
     </div>
     <div id="wl-grid" class="grid grid-3"></div>
     <div id="wl-empty" class="empty-state" style="display:none;">
       <h3>Tu watchlist está vacía</h3>
       <p>Marca <span style="color:var(--amber); font-size:14px;">☆</span> en cualquier mercado para agregarlo aquí.</p>
-      <p>Comparte el link <code>📋 share watchlist</code> para ver la misma lista en otro dispositivo.</p>
+      <p>El enlace <code>share/edit watchlist</code> abre la misma lista en otro dispositivo.</p>
     </div>
   </section>
 
@@ -295,12 +368,14 @@
       <h2>TOP MOVERS · 24H</h2>
       <span class="sub">|Δ| ≥ 5pp, vol24h ≥ $10k</span>
     </div>
+    <div class="table-wrap">
     <table id="mv-tbl">
       <thead><tr>
         <th></th><th>Δ24H</th><th>YES</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
       </tr></thead>
       <tbody><tr><td colspan="6" class="loading">connecting…</td></tr></tbody>
     </table>
+    </div>
   </section>
 
   <section>
@@ -308,12 +383,14 @@
       <h2>TOP MARKETS · 24H VOLUME</h2>
       <span class="sub">individual markets ranked by flow</span>
     </div>
+    <div class="table-wrap">
     <table id="trending-tbl">
       <thead><tr>
         <th></th><th>VOL 24H</th><th>YES</th><th>Δ24H</th><th>END</th><th>QUESTION</th>
       </tr></thead>
       <tbody><tr><td colspan="6" class="loading">connecting…</td></tr></tbody>
     </table>
+    </div>
   </section>
 
 </div>
@@ -323,16 +400,18 @@
   <section>
     <div class="section-title">
       <h2>VALUE PLAYS</h2>
-      <span class="sub">extreme prices + active flow + medium horizon (heuristic auto-screen)</span>
+      <span class="sub">extreme prices + active flow + medium horizon</span>
     </div>
+    <div class="table-wrap">
     <table id="vp-tbl">
       <thead><tr>
         <th></th><th>SCORE</th><th>YES</th><th>Δ24H</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
       </tr></thead>
       <tbody><tr><td colspan="7" class="loading">connecting…</td></tr></tbody>
     </table>
+    </div>
     <p style="color:var(--mut); font-size:10.5px; margin-top:8px;">
-      Score = extremity × log(liquidity) × (1 + movement). High score = market is making a strong call (extreme price) with money behind it. Your edge: a contrarian view backed by analysis.
+      Score = extremity × log(liquidity) × (1 + movement). Higher score means stronger consensus price plus recent flow; validate independently.
     </p>
   </section>
 </div>
@@ -345,27 +424,44 @@
       <h2>HIGH-CONVICTION</h2>
       <span class="sub">YES 70-97%, end ≤60d, vol24h ≥ $20k</span>
     </div>
+    <div class="table-wrap">
     <table id="hc-tbl">
       <thead><tr>
         <th></th><th>YES</th><th>Δ24H</th><th>END</th><th>VOL 24H</th><th>QUESTION</th>
       </tr></thead>
       <tbody><tr><td colspan="6" class="loading">connecting…</td></tr></tbody>
     </table>
+    </div>
   </section>
 
   <section>
     <div class="section-title">
       <h2>TOP FLOW</h2>
-      <span class="sub">where the money is moving</span>
+      <span class="sub">largest active markets by 24h volume</span>
     </div>
+    <div class="table-wrap">
     <table id="fl-tbl">
       <thead><tr>
         <th></th><th>VOL 24H</th><th>YES</th><th>END</th><th>QUESTION</th>
       </tr></thead>
       <tbody><tr><td colspan="5" class="loading">connecting…</td></tr></tbody>
     </table>
+    </div>
   </section>
 
+</div>
+
+<!-- TAPE TAB -->
+<div class="tab-pane tape-pane" data-pane="tape">
+  <section>
+    <div class="section-title">
+      <h2>LIVE TAPE · POLYMARKET</h2>
+      <span class="sub" id="tape-meta-mobile">—</span>
+    </div>
+    <div class="tape-list" id="tape-list-mobile">
+      <div class="loading">connecting…</div>
+    </div>
+  </section>
 </div>
 
 </main>
@@ -396,6 +492,7 @@ const fmt = {
     return '$'+v.toFixed(0);
   },
   days(d) { return d == null ? '—' : d+'d'; },
+  count(n) { return Number(n || 0).toLocaleString(); },
 };
 const escapeHtml = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
@@ -450,8 +547,10 @@ document.getElementById('share').addEventListener('click', async () => {
 //======================================================================
 const live = document.getElementById('live');
 const meta = document.getElementById('meta');
+const statusAlert = document.getElementById('status-alert');
 const POLL_MS = 5000;
 let pollTimer = null, pollInflight = false;
+let lastGoodUpdate = null;
 
 async function poll() {
   if (pollInflight) return;
@@ -461,11 +560,17 @@ async function poll() {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const data = await r.json();
     render(data);
+    lastGoodUpdate = data.ts ? new Date(data.ts) : new Date();
+    statusAlert.hidden = true;
+    statusAlert.textContent = '';
     live.classList.add('connected');
     live.querySelector('.dot').nextSibling.textContent = 'LIVE';
   } catch(e) {
     live.classList.remove('connected');
     live.querySelector('.dot').nextSibling.textContent = 'OFFLINE';
+    const stale = lastGoodUpdate ? ` Last successful update: ${lastGoodUpdate.toLocaleTimeString()}.` : '';
+    statusAlert.textContent = `Data feed unavailable.${stale} Existing rows may be stale.`;
+    statusAlert.hidden = false;
     console.warn('poll fail', e);
   } finally {
     pollInflight = false;
@@ -488,8 +593,10 @@ document.addEventListener('visibilitychange', () => {
 document.querySelectorAll('.tab').forEach(t => {
   t.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', 'false'));
     document.querySelectorAll('.tab-pane').forEach(x=>x.classList.remove('active'));
     t.classList.add('active');
+    t.setAttribute('aria-selected', 'true');
     document.querySelector(`[data-pane="${t.dataset.tab}"]`).classList.add('active');
   });
 });
@@ -529,25 +636,30 @@ async function toggleStar(slug) {
 window.toggleStar = toggleStar;
 
 function updateAllStars() {
-  document.querySelectorAll('td.star[data-slug]').forEach(el => {
+  document.querySelectorAll('[data-slug]').forEach(el => {
     const on = watchlistSlugs.has(el.dataset.slug);
-    const span = el.querySelector('span');
-    if (span) {
-      span.textContent = on ? '★' : '☆';
-      span.classList.toggle('on', on);
+    const target = el.matches('button') ? el : el.querySelector('button, span');
+    if (target) {
+      target.textContent = on ? '★' : '☆';
+      target.classList.toggle('on', on);
+      target.setAttribute('aria-pressed', on ? 'true' : 'false');
+      target.setAttribute('aria-label', on ? 'Remove from watchlist' : 'Add to watchlist');
     }
   });
 }
 
 function updateBadge() {
   document.getElementById('wl-count').textContent = watchlistSlugs.size;
+  document.getElementById('stat-watchlist').textContent = watchlistSlugs.size;
 }
 
 function starCell(slug) {
   if (!slug) return '<td></td>';
   const on = watchlistSlugs.has(slug);
   const slugEsc = escapeHtml(slug);
-  return `<td class="star" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')"><span class="${on?'on':''}">${on?'★':'☆'}</span></td>`;
+  return `<td class="star" data-slug="${slugEsc}">
+    <button type="button" class="star-button ${on?'on':''}" aria-pressed="${on?'true':'false'}" aria-label="${on?'Remove from watchlist':'Add to watchlist'}" onclick="toggleStar('${slugEsc}')">${on?'★':'☆'}</button>
+  </td>`;
 }
 
 //======================================================================
@@ -571,8 +683,21 @@ function render(s) {
   if (s.high_conv) renderHC(s.high_conv);
   if (s.top_flow) renderFlow(s.top_flow);
   if (s.trades) renderTape(s.trades);
+  renderSummary(s);
 
   updateAllStars();
+}
+
+function renderSummary(s) {
+  const markets = s.trending_markets || [];
+  const movers = s.top_movers || [];
+  const events = s.events || [];
+  const flow = markets.reduce((sum, m) => sum + (Number(m.vol24h) || 0), 0);
+  document.getElementById('stat-markets').textContent = fmt.count(markets.length);
+  document.getElementById('stat-flow').textContent = fmt.vol(flow);
+  document.getElementById('stat-movers').textContent = fmt.count(movers.length);
+  document.getElementById('stat-events').textContent = fmt.count(events.length);
+  document.getElementById('stat-watchlist').textContent = fmt.count(watchlistSlugs.size);
 }
 
 function renderSafest(rows) {
@@ -596,20 +721,20 @@ function renderSafest(rows) {
     return `<div class="bet-card safe">
       <div class="q">
         <span>${escapeHtml(m.question || '')}</span>
-        <span class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</span>
+        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</button>
       </div>
       <div class="action">
-        <span class="verb">APUESTA</span>
+        <span class="verb">LADO IMPLÍCITO</span>
         <span class="${sideCls}">${sideTxt}</span>
-        <span class="verb">a</span>
+        <span class="verb">PRECIO</span>
         <span class="price">${priceCents}¢</span>
       </div>
       <div class="econ">
-        ganas <span class="win">${winCents}¢</span> si pasa · arriesgas <span class="risk">${riskCents}¢</span> si no
+        payout máx. <span class="win">${winCents}¢</span> por acción · coste <span class="risk">${riskCents}¢</span>
       </div>
       <div class="meta-row">
         <span><span class="pill-conf">🟢 ${confPct}%</span></span>
-        <span>${fmt.vol(m.vol24h)} · ${days}</span>
+        <span>${fmt.vol(m.vol24h)} 24h · ${days}</span>
       </div>
     </div>`;
   }).join('');
@@ -634,7 +759,7 @@ function renderToday(rows) {
     return `<div class="bet-card today">
       <div class="q">
         <span>${escapeHtml(m.question || '')}</span>
-        <span class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</span>
+        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</button>
       </div>
       <div class="action" style="align-items:center;">
         <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
@@ -642,7 +767,7 @@ function renderToday(rows) {
       </div>
       <div class="meta-row">
         <span>${fmt.vol(m.vol24h)} 24h</span>
-        <span>faltan ${days}</span>
+        <span>${days} to close</span>
       </div>
     </div>`;
   }).join('');
@@ -666,7 +791,7 @@ function renderWatchlist(wl) {
     return `<div class="bet-card yours">
       <div class="q">
         <span>${escapeHtml(m.question || '')}</span>
-        <span class="star-card on" data-slug="${slugEsc}" onclick="toggleStar('${slugEsc}')">★</span>
+        <button type="button" class="star-card on" data-slug="${slugEsc}" aria-pressed="true" aria-label="Remove from watchlist" onclick="toggleStar('${slugEsc}')">★</button>
       </div>
       <div class="action" style="align-items:center;">
         <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
@@ -788,12 +913,15 @@ function renderFlow(rows) {
 }
 
 function renderTape(trades) {
-  const wrap = document.getElementById('tape-list');
-  const tmeta = document.getElementById('tape-meta');
-  if (!trades.length) { wrap.innerHTML = '<div class="loading">no trades</div>'; return; }
-  tmeta.textContent = `${trades.length} trades`;
+  const wraps = [document.getElementById('tape-list'), document.getElementById('tape-list-mobile')].filter(Boolean);
+  const metas = [document.getElementById('tape-meta'), document.getElementById('tape-meta-mobile')].filter(Boolean);
+  if (!trades.length) {
+    wraps.forEach(wrap => { wrap.innerHTML = '<div class="loading">no trades</div>'; });
+    return;
+  }
+  metas.forEach(tmeta => { tmeta.textContent = `${trades.length} trades`; });
   const ids = new Set();
-  wrap.innerHTML = trades.map(t => {
+  const html = trades.map(t => {
     const id = `${t.ts}-${t.slug}-${t.side}-${t.size}-${t.price}`;
     ids.add(id);
     const flash = !prevTradesIds.has(id) ? (t.side==='BUY'?'flash-buy':'flash-sell') : '';
@@ -808,6 +936,7 @@ function renderTape(trades) {
       <div class="meta">${escapeHtml(t.outcome||'')} · ${t.size.toFixed(0)} sh · ${escapeHtml(t.pseudonym||'')}</div>
     </div>`;
   }).join('');
+  wraps.forEach(wrap => { wrap.innerHTML = html; });
   prevTradesIds = ids;
 }
 
