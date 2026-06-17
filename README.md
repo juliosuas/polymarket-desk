@@ -2,34 +2,67 @@
 
 # Polymarket Desk
 
-**A Bloomberg-style command center for Polymarket market flow, movers, value screens, and live trade tape.**
+**The Bloomberg Terminal for prediction-market traders.**
+
+Track Polymarket flow, spot sharp 24h moves, surface extreme consensus bets, and watch the live tape from one fast desk-style interface.
 
 [![Live Demo](https://img.shields.io/badge/live-vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://polymarket-desk-seven.vercel.app)
 [![GitHub](https://img.shields.io/badge/github-polymarket--desk-181717?style=for-the-badge&logo=github)](https://github.com/juliosuas/polymarket-desk)
 [![Python](https://img.shields.io/badge/python-serverless-3776AB?style=for-the-badge&logo=python&logoColor=white)](#stack)
 [![Vercel KV](https://img.shields.io/badge/storage-vercel%20kv-000000?style=for-the-badge&logo=vercel)](#stack)
 
-[Open the app](https://polymarket-desk-seven.vercel.app) · [API](#api) · [Run locally](#local-development) · [Roadmap](#roadmap)
+[Open the app](https://polymarket-desk-seven.vercel.app) · [Why it matters](#why-it-matters) · [Use cases](#use-cases) · [Roadmap](#roadmap)
 
 </div>
 
 ![Polymarket Desk product tour](docs/screenshots/product-tour.gif)
 
-## What It Is
+## The Pitch
 
-Polymarket Desk is a real-time market intelligence dashboard for Polymarket. It pulls public market data, ranks active opportunities, and presents the result in a dense terminal-style interface built for scanning.
+Prediction markets are becoming a real-time layer for news, politics, sports, macro, crypto, AI, and internet culture. Polymarket has the liquidity and the narratives, but the default experience is optimized for browsing markets, not for operating like a trader.
+
+Polymarket Desk turns public market data into an **operator console**:
+
+- See what the market is paying attention to.
+- Catch 24h price dislocations before they disappear.
+- Watch trade flow print live.
+- Save and share a watchlist without creating an account.
+- Use the dashboard as a base layer for alerts, analytics, newsletters, bots, or paid tooling.
 
 It is intentionally **read-only**. It does not place orders, connect wallets, custody funds, or require private Polymarket credentials.
 
-## Why It Exists
+## Why It Matters
 
-Polymarket has a lot of live information, but the useful signal is spread across markets, events, price moves, volume, and trade flow. This project compresses that into one operator view:
+Every active prediction-market user asks the same questions:
 
-- What markets are getting paid attention right now?
-- What moved hard in the last 24 hours?
-- Where is the crowd extremely confident?
-- Which markets deserve a second look before everyone else notices?
-- What is printing on the tape right now?
+- **What is moving right now?**
+- **Where is volume concentrating?**
+- **What has the crowd priced as nearly certain?**
+- **Which markets are mispriced if my view is different?**
+- **What are other traders actually doing?**
+
+Polymarket Desk compresses those answers into one screen.
+
+## Who It Is For
+
+| Audience | Why they care |
+| --- | --- |
+| Prediction-market traders | Faster market scanning, watchlists, live tape, and catalyst detection |
+| Reddit / Discord bettors | A clean way to find spicy markets and big moves without scrolling forever |
+| Developers | A small, hackable Polymarket data app with serverless APIs and no framework overhead |
+| Newsletter writers | A source for daily "top movers", "market heat", and "consensus watch" sections |
+| Investors / YC-style reviewers | A wedge into the prediction-market tooling layer: dashboards, alerts, analytics, and trade infrastructure |
+
+## Product Thesis
+
+Prediction markets are still early, but the tooling gap is obvious. Crypto got block explorers, DEX screeners, wallet trackers, alert bots, and trading terminals. Prediction markets will need the same stack.
+
+Polymarket Desk is a small wedge into that stack:
+
+- **Start with read-only intelligence**, because it is safer and broadly useful.
+- **Build habits around watchlists and alerts**, because traders come back when the market moves.
+- **Layer in data history and collaboration**, because market context compounds.
+- **Optionally expand toward execution later**, once risk, compliance, and UX are mature.
 
 ## Live Demo
 
@@ -50,6 +83,14 @@ https://polymarket-desk-seven.vercel.app
 | Live Tape | Recent public trades across Polymarket |
 | Watchlist | Shareable per-user market list backed by Vercel KV |
 
+## What Makes It Different
+
+- **Built for scanning, not browsing**: dense layout, tabbed screens, fast polling, and tape-first market context.
+- **No wallet required**: useful to lurkers, researchers, traders, and builders before any transaction.
+- **Shareable watchlists**: a simple URL can carry a market list across devices or groups.
+- **Hackable architecture**: no heavy frontend framework, simple Python APIs, easy to fork.
+- **Clear expansion path**: alerts, analytics, historical data, user accounts, premium filters, and eventually execution tools.
+
 ## Screenshots
 
 ### Desktop
@@ -68,6 +109,38 @@ https://polymarket-desk-seven.vercel.app
 - **Serverless data layer**: Python functions aggregate public Polymarket APIs.
 - **No build pipeline**: vanilla HTML/CSS/JS frontend, deployable directly on Vercel.
 - **Read-only by design**: no trading keys, no wallet connection, no order execution.
+
+## Use Cases
+
+### For prediction-market traders
+
+- Open it before trading to see where attention and liquidity are moving.
+- Use `Value Plays` to find extreme consensus markets worth researching.
+- Track a personalized watchlist across devices with a share link.
+- Watch the live tape to understand what is actively printing.
+
+### For Reddit and Discord communities
+
+- Share a watchlist link around a theme: elections, sports, crypto, AI, geopolitics.
+- Use the dashboard as a "what is hot today?" reference.
+- Pull screenshots for posts, threads, and daily discussion.
+
+### For developers
+
+- Fork it as a starter for Polymarket data apps.
+- Add Telegram, Discord, email, or webhook alerts.
+- Store snapshots for historical charts.
+- Build a richer API around market discovery and event tracking.
+
+### For VC / YC-style evaluation
+
+This is not just a dashboard. It is a wedge into prediction-market infrastructure:
+
+- **Market**: prediction markets are becoming a real-time information and trading layer.
+- **User pain**: active users need discovery, monitoring, alerts, and context.
+- **Initial wedge**: free read-only dashboard with live utility.
+- **Expansion**: alerts, accounts, collaboration, historical analytics, premium screens, execution workflows.
+- **Distribution**: Reddit, Discord, crypto Twitter, prediction-market communities, newsletters, and open-source developers.
 
 ## Stack
 
@@ -184,6 +257,25 @@ score = extremity * log(liquidity) * (1 + movement)
 
 This is a discovery screen, not a trading recommendation. It highlights candidates for deeper independent research.
 
+## Monetization Paths
+
+This repo is currently an open-source personal project, but the product direction is commercially plausible:
+
+- Premium alerts for price moves, volume spikes, and watchlist changes.
+- Saved dashboards and private watchlists for serious traders.
+- Historical analytics and market backtesting.
+- Newsletter or community intelligence product.
+- API access for market discovery and event monitoring.
+- Pro terminal for prediction-market power users.
+
+## Growth Loops
+
+- Watchlists are shareable by URL.
+- Screenshots are naturally postable to Reddit, Discord, and X.
+- The live demo gives immediate utility without signup.
+- The open-source repo gives developers a reason to fork, star, and extend it.
+- Each new alert/channel integration creates another distribution surface.
+
 ## Local Development
 
 Prerequisites:
@@ -236,12 +328,26 @@ https://polymarket-desk-seven.vercel.app
 
 ## Roadmap
 
+### Near term
+
 - Add analytics for visitors, sessions, and most-used screens.
 - Add saved filters and named watchlists.
 - Add Telegram/Discord alerts for price moves and volume spikes.
-- Add historical snapshots for charts and momentum curves.
 - Add richer market detail pages with event context.
-- Add optional authenticated accounts while keeping the public dashboard read-only.
+
+### Medium term
+
+- Store historical snapshots for charts and momentum curves.
+- Add user accounts while keeping the public dashboard read-only.
+- Add daily market digest generation.
+- Add custom alert rules and webhook delivery.
+
+### Long term
+
+- Backtesting for market-screen strategies.
+- Team/shared desks for research groups.
+- Premium data and pro filters.
+- Optional execution layer, only after careful wallet, risk, and compliance work.
 
 ## Security And Privacy
 
