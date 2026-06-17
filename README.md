@@ -13,7 +13,7 @@
 
 </div>
 
-![Polymarket Desk desktop dashboard](docs/screenshots/dashboard-markets.png)
+![Polymarket Desk product tour](docs/screenshots/product-tour.gif)
 
 ## What It Is
 
