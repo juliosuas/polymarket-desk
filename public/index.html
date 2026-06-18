@@ -14,26 +14,30 @@
 <meta name="twitter:card" content="summary">
 <style>
   :root {
-    --bg: #07090c;
-    --panel: #0f141a;
-    --panel2: #161c24;
-    --line: #1e2731;
-    --line2: #2a3540;
-    --fg: #e4e4e7;
-    --mut: #71717a;
-    --mut2: #52525b;
-    --amber: #f5a524;
-    --green: #22c55e;
-    --red: #ef4444;
-    --blue: #38bdf8;
+    --bg: #080d14;
+    --panel: #101821;
+    --panel2: #172231;
+    --line: #233143;
+    --line2: #34465c;
+    --fg: #f2f6fb;
+    --mut: #93a4b8;
+    --mut2: #65758a;
+    --amber: #2f8cff;
+    --green: #27c281;
+    --red: #f05252;
+    --blue: #4aa8ff;
     --pink: #ec4899;
     --violet: #a78bfa;
+    --yes-bg: rgba(39,194,129,.14);
+    --no-bg: rgba(240,82,82,.13);
     --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
   * { box-sizing: border-box; }
   html, body { margin:0; padding:0; background:var(--bg); color:var(--fg);
-    font-family: var(--mono); font-size: 12.5px; line-height: 1.45;
+    font-family: var(--sans); font-size: 12.5px; line-height: 1.45;
     -webkit-font-smoothing: antialiased; }
+  body { background: linear-gradient(180deg, #0b111b 0%, #080d14 34%, #090d13 100%); }
   a { color: var(--blue); text-decoration: none; }
   a:hover { text-decoration: underline; }
 
@@ -47,11 +51,17 @@
   header { grid-column: 1 / -1; display:flex;
     justify-content:space-between; align-items:center; gap: 12px; flex-wrap: wrap;
     padding: 12px 22px; border-bottom: 1px solid var(--line);
-    background: linear-gradient(180deg, #0d1117, #07090c);
+    background: rgba(8,13,20,.92); backdrop-filter: blur(14px);
     position: sticky; top: 0; z-index: 100; }
-  header .brand { display:flex; align-items:baseline; gap: 14px; flex-wrap:wrap; }
-  header h1 { margin:0; font-size: 14px; font-weight:600; letter-spacing: .18em;
-    color: var(--amber); }
+  header .brand { display:flex; align-items:center; gap: 12px; flex-wrap:wrap; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 7px;
+    background: linear-gradient(145deg, rgba(47,140,255,.95), rgba(39,194,129,.9));
+    display:grid; place-items:center; box-shadow: 0 10px 28px rgba(47,140,255,.22); }
+  .brand-mark::before { content:""; width: 12px; height: 12px;
+    border: 2px solid #fff; transform: rotate(45deg); border-left-color: transparent;
+    border-bottom-color: transparent; }
+  header h1 { margin:0; font-size: 14px; font-weight:700; letter-spacing: .08em;
+    color: var(--fg); }
   header .live { font-size: 10px; letter-spacing: .15em; color: var(--mut); }
   header .live .dot { display:inline-block; width:8px; height:8px;
     border-radius:50%; background: var(--mut); margin-right: 4px;
@@ -64,10 +74,10 @@
   }
   header .meta { color: var(--mut); font-size: 11px; }
   header .actions { display:flex; gap:10px; align-items:center; flex-wrap: wrap; justify-content: flex-end; }
-  button, input, select, textarea { font-family: var(--mono); }
+  button, input, select, textarea { font-family: var(--sans); }
   header button, .tool-button { background: var(--panel2); color: var(--fg);
     border: 1px solid var(--line); padding: 6px 14px; cursor: pointer;
-    font-family: var(--mono); font-size: 11px; letter-spacing: .08em;
+    font-family: var(--sans); font-size: 11px; letter-spacing: .04em;
     border-radius: 4px; }
   header button:hover, .tool-button:hover,
   header button:focus-visible, .tool-button:focus-visible { border-color: var(--amber); color: var(--amber); outline: none; }
@@ -88,8 +98,8 @@
     background: var(--panel2); display:flex; justify-content:space-between; align-items:center; }
   aside.tape .tape-list { overflow-y: auto; flex: 1; padding: 0; }
 
-  .tape-row { padding: 7px 14px; border-bottom: 1px solid var(--line);
-    font-size: 11px; display:grid; grid-template-columns: 50px 50px 1fr;
+  .tape-row { padding: 8px 14px; border-bottom: 1px solid var(--line);
+    font-size: 11px; display:grid; grid-template-columns: 58px 54px 1fr;
     gap: 6px; align-items:start; }
   .tape-row.flash-buy { animation: flashGreen 1.5s; }
   .tape-row.flash-sell { animation: flashRed 1.5s; }
@@ -124,8 +134,10 @@
   .notice strong { color: var(--amber); font-weight: 700; letter-spacing: .12em; font-size: 10px; }
   .notice span { color: var(--mut); font-size: 11px; }
 
-  .cockpit { border: 1px solid var(--line); background: var(--panel);
-    border-radius: 6px; padding: 13px; margin-bottom: 14px; }
+  .cockpit { border: 1px solid var(--line); background:
+    linear-gradient(180deg, rgba(23,34,49,.96), rgba(16,24,33,.96));
+    border-radius: 8px; padding: 13px; margin-bottom: 14px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.18); }
   .cockpit-head { display:flex; justify-content:space-between; align-items:flex-start;
     gap: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
   .eyebrow { color: var(--amber); font-size: 10px; letter-spacing: .16em; font-weight: 700; }
@@ -137,15 +149,15 @@
   .desk-mode.readonly { color: var(--blue); }
   .quick-actions { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px;
     margin: 11px 0 0; }
-  .quick-actions button { border:1px solid var(--line); background:#0b1016; color:var(--fg);
-    border-radius:4px; padding:8px 6px; cursor:pointer; font-size:10.5px;
-    letter-spacing:.08em; text-transform:uppercase; min-width:0; }
+  .quick-actions button { border:1px solid var(--line); background:#0d1420; color:var(--fg);
+    border-radius:6px; padding:9px 6px; cursor:pointer; font-size:11px;
+    letter-spacing:.02em; min-width:0; font-weight:700; }
   .quick-actions button.primary { border-color:rgba(245,165,36,.45); color:var(--amber); }
   .quick-actions button:hover, .quick-actions button:focus-visible {
     border-color:var(--amber); color:var(--amber); outline:none; }
   .since-brief { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
     margin: 11px 0; }
-  .brief-card { border: 1px solid var(--line); background: #0b1016; border-radius: 5px;
+  .brief-card { border: 1px solid var(--line); background: #0d1420; border-radius: 7px;
     padding: 9px 10px; min-width: 0; }
   .brief-card .k { color: var(--mut); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; }
   .brief-card .v { color: var(--fg); font-size: 13px; font-weight: 700;
@@ -154,8 +166,8 @@
   .brief-card .s { color: var(--mut); font-size: 10px; margin-top: 2px; overflow-wrap:anywhere; }
   .cockpit-grid { display:grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr);
     gap: 10px; }
-  .control-block { border: 1px solid var(--line); border-radius: 5px; padding: 10px;
-    background: #0b1016; min-width: 0; }
+  .control-block { border: 1px solid var(--line); border-radius: 7px; padding: 10px;
+    background: #0d1420; min-width: 0; }
   details.control-block { padding: 0; }
   details.control-block[open] { padding-bottom: 10px; }
   details.control-block summary { cursor: pointer; list-style: none; padding: 10px;
@@ -217,7 +229,7 @@
 
   .summary-strip { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px; margin-bottom: 12px; }
-  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 5px;
+  .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 7px;
     padding: 10px 11px; min-width: 0; }
   .stat .label { color: var(--mut); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; }
   .stat .value { color: var(--fg); font-size: 17px; font-weight: 700; margin-top: 3px;
@@ -226,13 +238,31 @@
   @media (max-width: 900px) { .summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 460px) { .summary-strip { grid-template-columns: 1fr; } }
 
+  .visual-strip { margin-bottom: 14px; }
+  .visual-strip-head { display:flex; justify-content:space-between; align-items:center;
+    gap: 10px; margin: 0 0 8px; }
+  .visual-strip-head h2 { margin:0; color:var(--fg); font-size:13px; letter-spacing:.04em; }
+  .visual-strip-head span { color:var(--mut); font-size:11px; }
+  .visual-market-grid { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+  .visual-market { min-height: 138px; border:1px solid var(--line); border-radius:8px;
+    background: linear-gradient(180deg, rgba(23,34,49,.98), rgba(13,20,32,.98));
+    padding: 10px; display:grid; grid-template-rows:auto 1fr auto; gap: 8px;
+    transition: transform .16s, border-color .16s; overflow:hidden; }
+  .visual-market:hover { transform: translateY(-1px); border-color: var(--line2); }
+  .visual-market-top { display:flex; justify-content:space-between; gap: 8px; align-items:flex-start; }
+  .visual-market .ttl { color:var(--fg); font-size:12px; font-weight:700; line-height:1.25;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .visual-market .sub { color:var(--mut); font-size:10.5px; display:flex; justify-content:space-between; gap:7px; }
+  @media (max-width: 1050px) { .visual-market-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .visual-market-grid { grid-template-columns: 1fr; } }
+
   .grid { display:grid; gap: 10px; }
   .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   @media (max-width: 760px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
 
   .card { background: var(--panel); border: 1px solid var(--line);
-    border-radius: 5px; padding: 12px 14px; }
+    border-radius: 7px; padding: 12px 14px; }
   .card h3 { margin: 0 0 4px 0; font-size: 11px; color: var(--mut);
     font-weight: 500; letter-spacing: .04em; line-height: 1.35;
     display:flex; gap:6px; align-items:flex-start; justify-content:space-between; }
@@ -247,10 +277,10 @@
   .card .row span:last-child { color: var(--fg); font-variant-numeric: tabular-nums; }
 
   .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--line);
-    border-radius: 5px; background: var(--panel); }
+    border-radius: 7px; background: var(--panel); }
   .table-wrap table { min-width: 760px; }
   table { width:100%; border-collapse: collapse; font-size: 11.5px; }
-  th, td { text-align: left; padding: 6px 9px; border-bottom: 1px solid var(--line); }
+  th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); }
   th { color: var(--mut); font-weight: 500; font-size: 9.5px;
     letter-spacing: .12em; text-transform: uppercase; }
   td.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
@@ -276,11 +306,11 @@
   .pill-blue { background: rgba(56,189,248,.12); color: var(--blue); border: 1px solid rgba(56,189,248,.3); }
   .pill-violet { background: rgba(167,139,250,.12); color: var(--violet); border: 1px solid rgba(167,139,250,.3); }
 
-  .event-row { display:grid; grid-template-columns: 36px 1fr auto;
-    gap: 11px; align-items: center; padding: 9px 12px;
+  .event-row { display:grid; grid-template-columns: 44px 1fr auto;
+    gap: 12px; align-items: center; padding: 10px 12px;
     border-bottom: 1px solid var(--line); transition: background 0.2s; }
   .event-row:hover { background: var(--panel2); }
-  .event-row img { width:32px; height:32px; border-radius:5px;
+  .event-row img { width:40px; height:40px; border-radius:8px;
     background:var(--panel2); object-fit: cover; }
   .event-row .ttl { color: var(--fg); font-size: 12px; line-height: 1.3; }
   .event-row .sub { color: var(--mut); font-size: 10.5px; margin-top: 2px; }
@@ -290,8 +320,8 @@
   .tabs { display:flex; gap:0; margin-bottom: 12px; border-bottom: 1px solid var(--line);
     overflow-x: auto; }
   .tab { appearance:none; background:transparent; border:0; border-bottom: 2px solid transparent;
-    padding: 8px 16px; cursor: pointer; font-family: var(--mono); font-size: 11px;
-    letter-spacing: .12em; color: var(--mut); white-space: nowrap; }
+    padding: 8px 16px; cursor: pointer; font-family: var(--sans); font-size: 11px;
+    letter-spacing: .06em; color: var(--mut); white-space: nowrap; font-weight:700; }
   .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
   .tab:hover, .tab:focus-visible { color: var(--fg); outline: none; }
   .tab .badge { display:inline-block; min-width: 16px; height:16px; padding: 0 5px;
@@ -303,17 +333,21 @@
   .tab-pane.active { display: block; }
 
   /* Market cards */
-  .bet-card { background: var(--panel); border: 1px solid var(--line);
-    border-radius: 6px; padding: 14px 16px; display:flex; flex-direction: column;
-    gap: 8px; transition: border-color 0.2s; }
-  .bet-card:hover { border-color: var(--line2); }
+  .bet-card { background: linear-gradient(180deg, rgba(23,34,49,.98), rgba(16,24,33,.98));
+    border: 1px solid var(--line); border-radius: 8px; padding: 10px; display:flex;
+    flex-direction: column; gap: 9px; transition: transform .16s, border-color .16s;
+    min-height: 188px; overflow:hidden; }
+  .bet-card:hover { border-color: var(--line2); transform: translateY(-1px); }
   .bet-card.safe { border-left: 3px solid var(--green); }
   .bet-card.today { border-left: 3px solid var(--amber); }
   .bet-card.yours { border-left: 3px solid var(--violet); }
-  .bet-card .q { color: var(--fg); font-size: 12.5px; line-height: 1.35;
-    display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+  .bet-card-head { display:grid; grid-template-columns: 46px 1fr auto; gap: 9px; align-items:start; }
+  .bet-card .q { color: var(--fg); font-size: 12.5px; line-height: 1.3; font-weight: 700;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:8px; min-width:0; }
+  .bet-card .q span { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+    overflow:hidden; }
   .bet-card .q .star-card { appearance:none; border:0; background:transparent; color: var(--mut);
-    cursor:pointer; font-family: var(--mono); font-size: 16px; line-height: 1;
+    cursor:pointer; font-family: var(--sans); font-size: 16px; line-height: 1;
     padding: 0; user-select:none; flex-shrink: 0; transition: color 0.15s, transform 0.15s; }
   .bet-card .q .star-card.on { color: var(--amber); }
   .bet-card .q .star-card:hover, .bet-card .q .star-card:focus-visible { color: var(--amber); transform: scale(1.18); outline:none; }
@@ -337,6 +371,26 @@
     font-variant-numeric: tabular-nums; }
   .bet-card .yes-big.up { color: var(--green); }
   .bet-card .yes-big.down { color: var(--red); }
+  .market-thumb { width: 42px; height: 42px; border-radius: 8px; overflow:hidden;
+    background: linear-gradient(145deg, rgba(47,140,255,.32), rgba(39,194,129,.22));
+    border:1px solid rgba(255,255,255,.08); display:grid; place-items:center;
+    color:var(--fg); font-weight:800; letter-spacing:.03em; flex-shrink:0; }
+  .market-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .market-thumb.sm { width: 34px; height: 34px; border-radius: 7px; font-size:10px; }
+  .prob-ring { width: 50px; height: 50px; border-radius:50%;
+    background: conic-gradient(var(--green) calc(var(--p) * 1%), rgba(255,255,255,.13) 0);
+    display:grid; place-items:center; padding:3px; flex-shrink:0; }
+  .prob-ring > span { width:100%; height:100%; border-radius:50%; background:var(--panel);
+    display:grid; place-items:center; color:var(--fg); font-weight:800; font-size:12px;
+    font-variant-numeric:tabular-nums; }
+  .binary-row { display:grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
+  .binary-row span { border-radius: 6px; padding: 8px 6px; text-align:center;
+    font-weight:800; font-size:11px; letter-spacing:.01em; border:1px solid transparent; }
+  .binary-row .yes-action { background: var(--yes-bg); color: var(--green); border-color: rgba(39,194,129,.2); }
+  .binary-row .no-action { background: var(--no-bg); color: var(--red); border-color: rgba(240,82,82,.18); }
+  .market-cell { display:grid; grid-template-columns: 34px 1fr; gap: 9px; align-items:center; min-width: 260px; }
+  .market-cell .qtitle { color:var(--fg); line-height:1.25; }
+  .market-cell .qmeta { color:var(--mut); font-size:10px; margin-top:2px; }
 
   .empty-state { padding: 40px 20px; text-align:center; color: var(--mut); }
   .empty-state h3 { color: var(--fg); margin: 0 0 8px 0; font-weight: 500; font-size: 14px; }
@@ -355,7 +409,7 @@
   .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.48);
     z-index: 180; }
   .drawer-backdrop[hidden] { display:none; }
-  .market-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: min(440px, 100vw);
+  .market-drawer { position: fixed; top: 0; right: 0; height: 100vh; width: min(470px, 100vw);
     background: var(--panel); border-left: 1px solid var(--line); z-index: 190;
     transform: translateX(100%); transition: transform .18s ease; display:flex;
     flex-direction: column; box-shadow: -12px 0 34px rgba(0,0,0,.32); }
@@ -367,6 +421,15 @@
     color:var(--fg); border-radius:4px; cursor:pointer; padding:5px 9px;
     font-size:10px; letter-spacing:.08em; }
   .drawer-body { padding: 15px 16px; overflow-y:auto; }
+  .drawer-hero { position:relative; min-height:170px; border:1px solid var(--line);
+    border-radius:8px; overflow:hidden; margin-bottom:12px;
+    background: linear-gradient(145deg, rgba(47,140,255,.25), rgba(39,194,129,.16)); }
+  .drawer-hero img { width:100%; height:190px; object-fit:cover; display:block; }
+  .drawer-hero.no-image { min-height:120px; display:flex; align-items:flex-end; padding:14px; }
+  .drawer-hero.no-image .market-thumb { width:56px; height:56px; font-size:16px; }
+  .drawer-hero .hero-shade { position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(8,13,20,.05), rgba(8,13,20,.9)); }
+  .drawer-hero .hero-ring { position:absolute; right:12px; bottom:12px; }
   .drawer-title { color: var(--fg); font-size: 14px; line-height: 1.35; margin: 0 0 12px; }
   .drawer-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
   .drawer-stat { border:1px solid var(--line); border-radius:5px; padding:9px; background:#0b1016; }
@@ -403,6 +466,7 @@
 
 <header>
   <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
     <h1>POLYMARKET DESK</h1>
     <span class="live" id="live"><span class="dot"></span>OFFLINE</span>
     <span class="meta" id="meta">connecting…</span>
@@ -546,6 +610,16 @@
     <div class="value" id="stat-watchlist">0</div>
   </div>
 </div>
+
+<section class="visual-strip" aria-label="Featured live markets">
+  <div class="visual-strip-head">
+    <h2>Featured Live Markets</h2>
+    <span>highest-flow markets right now</span>
+  </div>
+  <div id="featured-markets" class="visual-market-grid">
+    <div class="loading">connecting…</div>
+  </div>
+</section>
 
 <div class="tabs" role="tablist" aria-label="Dashboard sections">
   <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="markets">TODAY</button>
@@ -762,6 +836,45 @@ function safeImageUrl(src) {
   } catch(e) {
     return '';
   }
+}
+function marketImageUrl(m) {
+  return safeImageUrl(m?.image || m?.icon || m?.event_image || m?.thumbnail);
+}
+function marketInitials(m) {
+  const text = String(m?.question || m?.title || m?.slug || 'PM').replace(/[^a-zA-Z0-9 ]/g, ' ');
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  return (words[0]?.[0] || 'P').toUpperCase() + (words[1]?.[0] || 'M').toUpperCase();
+}
+function marketThumbHtml(m, cls = '') {
+  const img = marketImageUrl(m);
+  const initials = escapeHtml(marketInitials(m));
+  const klass = cls ? `market-thumb ${cls}` : 'market-thumb';
+  return `<div class="${klass}" aria-hidden="true">${
+    img ? `<img src="${escapeHtml(img)}" alt="" loading="lazy" onerror="this.parentElement.textContent='${initials}';this.remove()">` : initials
+  }</div>`;
+}
+function probabilityRingHtml(value) {
+  const pct = Math.max(0, Math.min(100, Number(value || 0) * 100));
+  return `<div class="prob-ring" style="--p:${pct.toFixed(1)}" aria-label="YES ${pct.toFixed(0)} percent"><span>${pct.toFixed(0)}%</span></div>`;
+}
+function binaryRowHtml(m) {
+  const yes = Math.max(0, Math.min(1, Number(m?.yes || 0)));
+  const no = Math.max(0, 1 - yes);
+  return `<div class="binary-row" aria-hidden="true">
+    <span class="yes-action">Yes ${fmt.pct(yes, 0)}</span>
+    <span class="no-action">No ${fmt.pct(no, 0)}</span>
+  </div>`;
+}
+function marketCellHtml(m) {
+  const question = escapeHtml(m?.question || m?.title || m?.slug || 'Market');
+  const meta = `${fmt.vol(m?.vol24h || m?.volume24hr)} Vol · ${fmt.days(m?.days)}`;
+  return `<div class="market-cell">
+    ${marketThumbHtml(m, 'sm')}
+    <div>
+      <div class="qtitle">${question}</div>
+      <div class="qmeta">${escapeHtml(meta)}</div>
+    </div>
+  </div>`;
 }
 function readStoredJson(key, fallback) {
   try {
@@ -1474,6 +1587,8 @@ function updateAllStars() {
 document.addEventListener('click', event => {
   const btn = event.target.closest('button[data-slug]');
   if (!btn) return;
+  event.preventDefault();
+  event.stopPropagation();
   toggleStar(btn.dataset.slug);
 });
 
@@ -1725,6 +1840,11 @@ function render(s) {
   }
 
   if (s.watchlist) renderWatchlist(s.watchlist);
+  renderFeaturedMarkets([
+    ...(s.trending_markets || []),
+    ...(s.today_movers || []),
+    ...(s.safest || []),
+  ]);
   if (s.safest) renderSafest(s.safest);
   if (s.today_movers) renderToday(s.today_movers);
   if (s.events) renderEvents(s.events);
@@ -1823,6 +1943,36 @@ function renderSummary(s) {
   document.getElementById('stat-watchlist').textContent = fmt.count(watchlistSlugs.size);
 }
 
+function renderFeaturedMarkets(rows) {
+  const wrap = document.getElementById('featured-markets');
+  if (!wrap) return;
+  const seen = new Set();
+  const picks = (rows || [])
+    .filter(m => m && m.slug && !seen.has(m.slug) && (seen.add(m.slug) || true))
+    .sort((a, b) => Number(b.vol24h || b.volume24hr || 0) - Number(a.vol24h || a.volume24hr || 0))
+    .slice(0, 4);
+  if (!picks.length) {
+    wrap.innerHTML = '<div class="loading">connecting…</div>';
+    return;
+  }
+  wrap.innerHTML = picks.map(m => {
+    const c = Number(m.one_day_change || 0);
+    const ccls = c > 0 ? 'pos' : (c < 0 ? 'neg' : '');
+    return `<div class="visual-market" data-market-slug="${escapeHtml(m.slug || '')}" tabindex="0">
+      <div class="visual-market-top">
+        ${marketThumbHtml(m)}
+        ${probabilityRingHtml(m.yes)}
+      </div>
+      <div class="ttl">${escapeHtml(m.question || m.slug || '')}</div>
+      ${binaryRowHtml(m)}
+      <div class="sub">
+        <span>${fmt.vol(m.vol24h || m.volume24hr)} Vol</span>
+        <span class="${ccls}">${fmt.pp(c)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderSafest(rows) {
   const grid = document.getElementById('safest-grid');
   const empty = document.getElementById('safest-empty');
@@ -1842,9 +1992,13 @@ function renderSafest(rows) {
     const confPct = (m.rec_price * 100).toFixed(0);
     const days = m.days != null ? m.days + 'd' : '—';
     return `<div class="bet-card safe" data-market-slug="${slugEsc}" tabindex="0">
-      <div class="q">
-        <span>${escapeHtml(m.question || m.slug || '')}</span>
-        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}">${onWl?'★':'☆'}</button>
+      <div class="bet-card-head">
+        ${marketThumbHtml(m)}
+        <div class="q">
+          <span>${escapeHtml(m.question || m.slug || '')}</span>
+          <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}">${onWl?'★':'☆'}</button>
+        </div>
+        ${probabilityRingHtml(m.yes || m.rec_price)}
       </div>
       <div class="action">
         <span class="verb">IMPLIED SIDE</span>
@@ -1855,6 +2009,7 @@ function renderSafest(rows) {
       <div class="econ">
         max payout <span class="win">${winCents}¢</span> per share · cost <span class="risk">${riskCents}¢</span>
       </div>
+      ${binaryRowHtml(m)}
       <div class="meta-row">
         <span><span class="pill-conf">CONF ${confPct}%</span></span>
         <span>${fmt.vol(m.vol24h)} 24h · ${days}</span>
@@ -1880,14 +2035,19 @@ function renderToday(rows) {
     const sign = c > 0 ? '+' : '';
     const days = m.days != null ? m.days + 'd' : '—';
     return `<div class="bet-card today" data-market-slug="${slugEsc}" tabindex="0">
-      <div class="q">
-        <span>${escapeHtml(m.question || m.slug || '')}</span>
-        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}">${onWl?'★':'☆'}</button>
+      <div class="bet-card-head">
+        ${marketThumbHtml(m)}
+        <div class="q">
+          <span>${escapeHtml(m.question || m.slug || '')}</span>
+          <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}">${onWl?'★':'☆'}</button>
+        </div>
+        ${probabilityRingHtml(m.yes)}
       </div>
       <div class="action" style="align-items:center;">
         <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
         <span class="pill ${cpill}">${sign}${c.toFixed(1)}pp 24h</span>
       </div>
+      ${binaryRowHtml(m)}
       <div class="meta-row">
         <span>${fmt.vol(m.vol24h)} 24h</span>
         <span>${days} to close</span>
@@ -1912,14 +2072,19 @@ function renderWatchlist(wl) {
     const sign = c > 0 ? '+' : '';
     const days = m.days != null ? m.days + 'd' : '—';
     return `<div class="bet-card yours" data-market-slug="${slugEsc}" tabindex="0">
-      <div class="q">
-        <span>${escapeHtml(m.question || m.slug || '')}</span>
-        <button type="button" class="star-card on" data-slug="${slugEsc}" aria-pressed="true" aria-label="Remove from watchlist">★</button>
+      <div class="bet-card-head">
+        ${marketThumbHtml(m)}
+        <div class="q">
+          <span>${escapeHtml(m.question || m.slug || '')}</span>
+          <button type="button" class="star-card on" data-slug="${slugEsc}" aria-pressed="true" aria-label="Remove from watchlist">★</button>
+        </div>
+        ${probabilityRingHtml(m.yes)}
       </div>
       <div class="action" style="align-items:center;">
         <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
         <span class="pill ${cpill}">${sign}${c.toFixed(1)}pp 24h</span>
       </div>
+      ${binaryRowHtml(m)}
       <div class="meta-row">
         <span>BID/ASK ${fmt.pct(m.best_bid)} / ${fmt.pct(m.best_ask)}</span>
         <span>${fmt.vol(m.vol24h)} · ${days}</span>
@@ -1960,7 +2125,7 @@ function renderMovers(id, rows) {
       <td class="num">${fmt.pct(r.yes)}</td>
       <td class="num">${fmt.days(r.days)}</td>
       <td class="num">${fmt.vol(r.vol24h)}</td>
-      <td class="q">${escapeHtml(r.question)}</td>
+      <td class="q">${marketCellHtml(r)}</td>
     </tr>`;
   }).join('');
 }
@@ -1983,7 +2148,7 @@ function renderTrending(rows) {
       <td class="num">${fmt.pct(r.yes)}</td>
       <td class="num ${ccls}">${c>0?'+':''}${c.toFixed(1)}pp</td>
       <td class="num">${fmt.days(r.days)}</td>
-      <td class="q">${escapeHtml(r.question)}</td>
+      <td class="q">${marketCellHtml(r)}</td>
     </tr>`;
   }).join('');
 }
@@ -2001,7 +2166,7 @@ function renderValuePlays(rows) {
       <td class="num ${ccls}">${c>0?'+':''}${c.toFixed(1)}pp</td>
       <td class="num">${fmt.days(r.days)}</td>
       <td class="num">${fmt.vol(r.vol24h)}</td>
-      <td class="q">${escapeHtml(r.question)}</td>
+      <td class="q">${marketCellHtml(r)}</td>
     </tr>`;
   }).join('');
 }
@@ -2018,7 +2183,7 @@ function renderHC(rows) {
       <td class="num ${ccls}">${c>0?'+':''}${c.toFixed(1)}pp</td>
       <td class="num">${fmt.days(r.days)}</td>
       <td class="num">${fmt.vol(r.vol24h)}</td>
-      <td class="q">${escapeHtml(r.question)}</td>
+      <td class="q">${marketCellHtml(r)}</td>
     </tr>`;
   }).join('');
 }
@@ -2032,7 +2197,7 @@ function renderFlow(rows) {
       <td class="num">${fmt.vol(r.vol24h)}</td>
       <td class="num">${fmt.pct(r.yes)}</td>
       <td class="num">${fmt.days(r.days)}</td>
-      <td class="q">${escapeHtml(r.question)}</td>
+      <td class="q">${marketCellHtml(r)}</td>
     </tr>`
   ).join('');
 }
@@ -2244,10 +2409,17 @@ function renderMarketDrawer(m, note = '') {
           ${escapeHtml(r.question || r.slug || 'Related market')} · ${fmt.pct(r.yes)}
         </button>`).join('')}
     </div>` : '';
-  const imageUrl = safeImageUrl(m.image || m.icon);
-  const image = imageUrl
-    ? `<img src="${escapeHtml(imageUrl)}" alt="" style="width:100%;max-height:160px;object-fit:cover;border-radius:5px;border:1px solid var(--line);margin-bottom:10px;" onerror="this.remove()">`
-    : '';
+  const imageUrl = marketImageUrl(m);
+  const hero = imageUrl
+    ? `<div class="drawer-hero">
+        <img src="${escapeHtml(imageUrl)}" alt="" loading="lazy" onerror="this.parentElement.classList.add('no-image');this.remove()">
+        <div class="hero-shade"></div>
+        <div class="hero-ring">${probabilityRingHtml(m.yes)}</div>
+      </div>`
+    : `<div class="drawer-hero no-image">
+        ${marketThumbHtml(m)}
+        <div class="hero-ring">${probabilityRingHtml(m.yes)}</div>
+      </div>`;
   const watchAction = isReadOnlyDesk()
     ? `<button class="tool-button" type="button" data-clone-market="${slugEsc}">CLONE MARKET</button>`
     : `<button class="tool-button" type="button" data-drawer-watch="${slugEsc}" aria-pressed="${watchlistSlugs.has(slug)?'true':'false'}">${watchlistSlugs.has(slug)?'REMOVE':'ADD'} WATCH</button>`;
@@ -2255,7 +2427,7 @@ function renderMarketDrawer(m, note = '') {
   const noteHtml = note ? `<div class="drawer-note">${escapeHtml(note)}</div>` : '';
   drawerRoute.textContent = slug || 'Market detail';
   marketDrawerBody.innerHTML = `
-    ${image}
+    ${hero}
     <p class="drawer-title">${escapeHtml(title)}</p>
     <div class="drawer-grid">
       <div class="drawer-stat"><div class="k">YES</div><div class="v">${fmt.pct(m.yes)}</div></div>
