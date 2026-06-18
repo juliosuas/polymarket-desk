@@ -50,7 +50,7 @@ python3 scripts/check_repo.py
 
 - Keep changes focused and explain the user-visible impact.
 - Do not commit real `.env` files, Vercel project linkage, tokens, or generated caches.
-- Preserve the read-only product boundary: no wallet connection, custody, or order execution without a separate design and risk discussion.
+- Preserve the non-custodial product boundary: no wallet connection, custody, private-key handling, or server-side order execution without a separate design and risk discussion.
 - Add or update documentation when behavior, setup, or API output changes.
 - Include screenshots or short clips for meaningful UI changes.
 

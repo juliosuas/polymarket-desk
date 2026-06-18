@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>POLYMARKET DESK</title>
-<meta name="description" content="A read-only desk for scanning Polymarket markets, 24h movers, live trade flow, and shareable watchlists.">
+<meta name="description" content="A non-custodial desk for scanning Polymarket markets, 24h movers, live trade flow, alerts, public desks, and safe order plans.">
 <meta name="theme-color" content="#07090c">
 <link rel="canonical" href="https://polymarket-desk-seven.vercel.app/">
 <meta property="og:title" content="Polymarket Desk">
@@ -135,6 +135,14 @@
   .desk-mode { border: 1px solid var(--line2); border-radius: 9999px; padding: 3px 9px;
     color: var(--green); font-size: 10px; letter-spacing: .12em; white-space: nowrap; }
   .desk-mode.readonly { color: var(--blue); }
+  .quick-actions { display:grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px;
+    margin: 11px 0 0; }
+  .quick-actions button { border:1px solid var(--line); background:#0b1016; color:var(--fg);
+    border-radius:4px; padding:8px 6px; cursor:pointer; font-size:10.5px;
+    letter-spacing:.08em; text-transform:uppercase; min-width:0; }
+  .quick-actions button.primary { border-color:rgba(245,165,36,.45); color:var(--amber); }
+  .quick-actions button:hover, .quick-actions button:focus-visible {
+    border-color:var(--amber); color:var(--amber); outline:none; }
   .since-brief { display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px;
     margin: 11px 0; }
   .brief-card { border: 1px solid var(--line); background: #0b1016; border-radius: 5px;
@@ -148,6 +156,17 @@
     gap: 10px; }
   .control-block { border: 1px solid var(--line); border-radius: 5px; padding: 10px;
     background: #0b1016; min-width: 0; }
+  details.control-block { padding: 0; }
+  details.control-block[open] { padding-bottom: 10px; }
+  details.control-block summary { cursor: pointer; list-style: none; padding: 10px;
+    display:flex; justify-content:space-between; align-items:center; gap: 10px; }
+  details.control-block summary::-webkit-details-marker { display:none; }
+  details.control-block summary span { color: var(--amber); font-size: 10px;
+    letter-spacing:.15em; font-weight: 700; }
+  details.control-block summary small { color: var(--mut); font-size: 10px;
+    font-weight: 400; letter-spacing:0; text-align:right; }
+  details.control-block[open] summary { border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+  details.control-block > :not(summary) { margin-left: 10px; margin-right: 10px; }
   .control-block h3 { margin:0 0 8px; color: var(--amber); font-size: 10px;
     letter-spacing: .15em; font-weight: 700; }
   .control-block label { display:block; color: var(--mut); font-size: 9.5px;
@@ -175,6 +194,7 @@
   .alert-row .sub { color: var(--mut); font-size: 10px; margin-top: 2px; }
   .alert-row .state { color: var(--amber); font-size: 10px; letter-spacing: .08em; white-space: nowrap; }
   @media (max-width: 980px) {
+    .quick-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .since-brief { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .cockpit-grid { grid-template-columns: 1fr; }
     .alert-form { grid-template-columns: 1fr 1fr; }
@@ -182,6 +202,7 @@
   }
   @media (max-width: 560px) {
     .cockpit-head { flex-direction: column; }
+    .quick-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .since-brief { grid-template-columns: 1fr; }
     .control-row { flex-direction: column; align-items: stretch; }
     .control-row.compact { flex-direction: row; flex-wrap: wrap; }
@@ -343,7 +364,8 @@
     padding: 14px 16px; border-bottom: 1px solid var(--line); background: var(--panel2); }
   .drawer-head h2 { margin:0; color: var(--amber); font-size: 11px; letter-spacing: .16em; }
   .drawer-close { appearance:none; border:1px solid var(--line); background:var(--panel);
-    color:var(--fg); border-radius:4px; cursor:pointer; padding:4px 8px; }
+    color:var(--fg); border-radius:4px; cursor:pointer; padding:5px 9px;
+    font-size:10px; letter-spacing:.08em; }
   .drawer-body { padding: 15px 16px; overflow-y:auto; }
   .drawer-title { color: var(--fg); font-size: 14px; line-height: 1.35; margin: 0 0 12px; }
   .drawer-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 10px 0; }
@@ -411,6 +433,14 @@
     <div class="desk-mode" id="desk-mode">EDIT</div>
   </div>
 
+  <div class="quick-actions" aria-label="Quick actions">
+    <button class="primary" type="button" data-jump-tab="markets">Today</button>
+    <button type="button" data-jump-tab="trending">Movers</button>
+    <button type="button" data-jump-target="watchlist-section">Watchlist</button>
+    <button type="button" data-jump-target="alerts-panel">Alerts</button>
+    <button type="button" data-jump-tab="tape">Tape</button>
+  </div>
+
   <div class="since-brief" id="since-brief" aria-live="polite">
     <div class="brief-card">
       <div class="k">Since last open</div>
@@ -420,8 +450,8 @@
   </div>
 
   <div class="cockpit-grid">
-    <div class="control-block">
-      <h3>WATCHLIST CONTROLS</h3>
+    <details class="control-block" id="watchlist-tools">
+      <summary><span>WATCHLISTS</span><small id="watchlist-tools-state">Default desk</small></summary>
       <label for="watchlist-select">Active watchlist</label>
       <div class="control-row">
         <select id="watchlist-select">
@@ -459,10 +489,10 @@
         <button class="tool-button" type="button" id="clone-desk" hidden>CLONE DESK</button>
       </div>
       <div class="hint" id="share-copy">Edit links carry your private watchlist token. Read-only desk links are safer for public sharing.</div>
-    </div>
+    </details>
 
-    <div class="control-block">
-      <h3>ALERT INBOX</h3>
+    <details class="control-block" id="alerts-panel">
+      <summary><span>ALERTS</span><small id="alerts-panel-state">No alerts yet</small></summary>
       <form class="alert-form" id="alert-form">
         <label>
           Market slug or URL
@@ -490,7 +520,7 @@
       <div class="alert-inbox" id="alert-inbox">
         <div class="loading">loading alerts…</div>
       </div>
-    </div>
+    </details>
   </div>
 </section>
 
@@ -518,10 +548,10 @@
 </div>
 
 <div class="tabs" role="tablist" aria-label="Dashboard sections">
-  <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="markets">MARKETS</button>
-  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="trending">TRENDING</button>
-  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="value">VALUE</button>
-  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="screens">SCREENS</button>
+  <button class="tab active" type="button" role="tab" aria-selected="true" data-tab="markets">TODAY</button>
+  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="trending">MOVERS</button>
+  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="value">IDEAS</button>
+  <button class="tab" type="button" role="tab" aria-selected="false" data-tab="screens">FILTERS</button>
   <button class="tab" type="button" role="tab" aria-selected="false" data-tab="tape">TAPE</button>
 </div>
 
@@ -550,7 +580,7 @@
     </div>
   </section>
 
-  <section>
+  <section id="watchlist-section">
     <div class="section-title">
       <h2>WATCHLIST <span class="badge" id="wl-count" style="margin-left:6px;">0</span></h2>
       <span class="sub" id="wl-subtitle">your shareable list; edit links can modify it</span>
@@ -698,7 +728,7 @@
       <h2>MARKET DETAIL</h2>
       <div class="route-copy" id="drawer-route">No market selected</div>
     </div>
-    <button class="drawer-close" type="button" id="drawer-close" aria-label="Close market detail">CLOSE</button>
+    <button class="drawer-close" type="button" id="drawer-close" aria-label="Back to desk">BACK TO DESK</button>
   </div>
   <div class="drawer-body" id="market-drawer-body">
     <div class="loading">Open a market to inspect it.</div>
@@ -901,6 +931,31 @@ const shareCopy = document.getElementById('share-copy');
 const copyReadonlyButton = document.getElementById('copy-readonly');
 const copyEditButton = document.getElementById('copy-edit');
 const cloneDeskButton = document.getElementById('clone-desk');
+const watchlistTools = document.getElementById('watchlist-tools');
+const watchlistToolsState = document.getElementById('watchlist-tools-state');
+const alertsPanel = document.getElementById('alerts-panel');
+const alertsPanelState = document.getElementById('alerts-panel-state');
+
+function panelStateText(count, singular, plural = singular + 's') {
+  return `${fmt.count(count)} ${count === 1 ? singular : plural}`;
+}
+
+function updateControlStates() {
+  if (watchlistToolsState) {
+    const mode = isReadOnlyDesk() ? 'shared' : (currentWatchlistId === 'default' ? 'default' : 'named');
+    watchlistToolsState.textContent = `${panelStateText(watchlistSlugs.size, 'saved')} · ${mode}`;
+  }
+  if (alertsPanelState) {
+    alertsPanelState.textContent = panelStateText(alerts.length + alertEvents.length, 'alert');
+  }
+}
+
+function revealPanel(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.tagName === 'DETAILS') el.open = true;
+  el.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
 
 function isReadOnlyDesk() {
   return Boolean(routeState.desk);
@@ -950,6 +1005,7 @@ function updateDeskChrome() {
   document.getElementById('wl-subtitle').textContent = readOnly
     ? 'read-only shared desk; clone it to edit in your own watchlist'
     : 'your shareable list; edit links can modify it';
+  updateControlStates();
 }
 
 function renderWatchlistSelector() {
@@ -968,6 +1024,7 @@ function renderWatchlistSelector() {
     watchlistName = selected.default ? (localStorage.getItem(NAME_KEY) || 'Daily Desk') : (selected.name || selected.id);
     watchlistNameInput.value = watchlistName;
   }
+  updateControlStates();
 }
 
 async function loadWatchlists() {
@@ -1326,15 +1383,37 @@ document.addEventListener('visibilitychange', () => {
 //======================================================================
 // tabs
 //======================================================================
+function activateTab(tabName, source = 'manual') {
+  const tab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  const pane = document.querySelector(`[data-pane="${tabName}"]`);
+  if (!tab || !pane) return;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', 'false'));
+  document.querySelectorAll('.tab-pane').forEach(x=>x.classList.remove('active'));
+  tab.classList.add('active');
+  tab.setAttribute('aria-selected', 'true');
+  pane.classList.add('active');
+  track(source === 'quick' ? 'quick_action_tab' : 'tab_change', {tab: tabName});
+}
+
 document.querySelectorAll('.tab').forEach(t => {
-  t.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', 'false'));
-    document.querySelectorAll('.tab-pane').forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    t.setAttribute('aria-selected', 'true');
-    document.querySelector(`[data-pane="${t.dataset.tab}"]`).classList.add('active');
-    track('tab_change', {tab: t.dataset.tab});
+  t.addEventListener('click', () => activateTab(t.dataset.tab));
+});
+
+document.querySelectorAll('[data-jump-tab]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activateTab(btn.dataset.jumpTab, 'quick');
+    document.querySelector('.tabs')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  });
+});
+
+document.querySelectorAll('[data-jump-target]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.jumpTarget;
+    if (target === 'watchlist-section') activateTab('markets', 'quick');
+    if (target === 'alerts-panel') revealPanel('alerts-panel');
+    setTimeout(() => revealPanel(target), 30);
+    track('quick_action_target', {target});
   });
 });
 
@@ -1401,6 +1480,7 @@ document.addEventListener('click', event => {
 function updateBadge() {
   document.getElementById('wl-count').textContent = watchlistSlugs.size;
   document.getElementById('stat-watchlist').textContent = watchlistSlugs.size;
+  updateControlStates();
 }
 
 function starCell(slug) {
@@ -1523,6 +1603,7 @@ function alertStatus(alertItem) {
 }
 
 function renderAlerts() {
+  updateControlStates();
   const eventHtml = alertEvents.slice(0, 10).map(e => `
     <div class="alert-row">
       <div>
@@ -1550,6 +1631,7 @@ function renderAlerts() {
     </div>`;
   }).join('');
   alertInbox.innerHTML = eventHtml + ruleHtml;
+  updateControlStates();
 }
 
 function notifyAlertEvent(eventItem) {
@@ -2170,7 +2252,8 @@ function renderMarketDrawer(m, note = '') {
     ? `<button class="tool-button" type="button" data-clone-market="${slugEsc}">CLONE MARKET</button>`
     : `<button class="tool-button" type="button" data-drawer-watch="${slugEsc}" aria-pressed="${watchlistSlugs.has(slug)?'true':'false'}">${watchlistSlugs.has(slug)?'REMOVE':'ADD'} WATCH</button>`;
   const ticketHtml = renderTradeTicket({...m, slug, question: title});
-  drawerRoute.textContent = slug ? `?m=${slug}` : 'Market route';
+  const noteHtml = note ? `<div class="drawer-note">${escapeHtml(note)}</div>` : '';
+  drawerRoute.textContent = slug || 'Market detail';
   marketDrawerBody.innerHTML = `
     ${image}
     <p class="drawer-title">${escapeHtml(title)}</p>
@@ -2192,7 +2275,7 @@ function renderMarketDrawer(m, note = '') {
     ${ticketHtml}
     ${tradeHtml}
     ${relatedHtml}
-    <div class="drawer-note">${escapeHtml(note || 'Detail data comes from /api/market when available, with the current screen cache as fallback.')}</div>`;
+    ${noteHtml}`;
   updateAllStars();
 }
 
@@ -2294,6 +2377,8 @@ document.addEventListener('click', event => {
   const alertMarket = event.target.closest('[data-alert-market]');
   if (alertMarket) {
     alertSlugInput.value = alertMarket.dataset.alertMarket;
+    closeMarketDrawer(true);
+    revealPanel('alerts-panel');
     alertTargetInput.focus();
     setHint('Alert form filled from the open market.');
     return;
