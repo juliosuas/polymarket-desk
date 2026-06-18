@@ -37,6 +37,7 @@ def _kv_call(method: str, path: str, body: bytes | None = None):
         method=method,
         headers={
             "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
             "User-Agent": "polydash/2.0",
         },
     )

@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest a product, data, alerting, or developer-experience improvement.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What job would this help a trader, builder, or researcher do?
+      placeholder: I want to know when a watched market moves more than 5pp...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the screen, filter, API, or workflow.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Market screens
+        - Watchlist
+        - Live tape
+        - Alerts
+        - API/data
+        - Deployment/docs
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives or extra context

@@ -16,12 +16,13 @@ snapshots/
 # Vercel project linkage / auth
 .vercel/
 
-# Real (non-example) plist with phone number — keep .example only
-com.ghostcat.rocha-tracker.plist
+# Environment files
+.env
+.env.*
+!.env.example
 
 # Editors
 .vscode/
 .idea/
 *.swp
 .vercel
-.env*.local

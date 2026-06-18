@@ -2,22 +2,37 @@
 
 # Polymarket Desk
 
-**The Bloomberg Terminal for prediction-market traders.**
+**A fast, read-only command center for prediction-market traders.**
 
-Track Polymarket flow, spot sharp 24h moves, surface extreme consensus bets, and watch the live tape from one fast desk-style interface.
+Track Polymarket flow, spot sharp 24h moves, surface extreme consensus bets, and follow the live tape from one desk-style interface.
 
 [![Live Demo](https://img.shields.io/badge/live-vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://polymarket-desk-seven.vercel.app)
 [![GitHub](https://img.shields.io/badge/github-polymarket--desk-181717?style=for-the-badge&logo=github)](https://github.com/juliosuas/polymarket-desk)
+[![Quality](https://img.shields.io/github/actions/workflow/status/juliosuas/polymarket-desk/quality.yml?branch=main&label=quality&style=for-the-badge&logo=github)](https://github.com/juliosuas/polymarket-desk/actions/workflows/quality.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge)](LICENSE)
 [![Python](https://img.shields.io/badge/python-serverless-3776AB?style=for-the-badge&logo=python&logoColor=white)](#stack)
 [![Vercel KV](https://img.shields.io/badge/storage-vercel%20kv-000000?style=for-the-badge&logo=vercel)](#stack)
 
-[Open the app](https://polymarket-desk-seven.vercel.app) · [Why it matters](#why-it-matters) · [Use cases](#use-cases) · [Roadmap](#roadmap)
+[Open the app](https://polymarket-desk-seven.vercel.app) · [Features](#features) · [Quick start](#quick-start) · [API](#api) · [Contribute](CONTRIBUTING.md)
 
 </div>
 
 ![Polymarket Desk product tour](docs/screenshots/product-tour.gif)
 
-## The Pitch
+## What You Get
+
+| Signal | Why it is useful |
+| --- | --- |
+| 24h market movers | See where pricing changed before the story gets old |
+| Top flow | Follow where attention and liquidity are concentrating |
+| Consensus screens | Find markets priced near certainty but still unresolved |
+| Value plays | Surface extreme-price candidates worth deeper research |
+| Live tape | Watch public trades print in real time |
+| Shareable watchlists | Track and share a market set without accounts or wallets |
+
+Polymarket Desk is intentionally **read-only**. It does not place orders, connect wallets, custody funds, or require private Polymarket credentials.
+
+## Why It Exists
 
 Prediction markets are becoming a real-time layer for news, politics, sports, macro, crypto, AI, and internet culture. Polymarket has the liquidity and the narratives, but the default experience is optimized for browsing markets, not for operating like a trader.
 
@@ -28,8 +43,6 @@ Polymarket Desk turns public market data into an **operator console**:
 - Watch trade flow print live.
 - Save and share a watchlist without creating an account.
 - Use the dashboard as a base layer for alerts, analytics, newsletters, bots, or paid tooling.
-
-It is intentionally **read-only**. It does not place orders, connect wallets, custody funds, or require private Polymarket credentials.
 
 ## Why It Matters
 
@@ -83,7 +96,7 @@ https://polymarket-desk-seven.vercel.app
 | Live Tape | Recent public trades across Polymarket |
 | Watchlist | Shareable per-user market list backed by Vercel KV |
 
-## What Makes It Different
+## Features
 
 - **Built for scanning, not browsing**: dense layout, tabbed screens, fast polling, and tape-first market context.
 - **No wallet required**: useful to lurkers, researchers, traders, and builders before any transaction.
@@ -132,7 +145,7 @@ https://polymarket-desk-seven.vercel.app
 - Store snapshots for historical charts.
 - Build a richer API around market discovery and event tracking.
 
-### For VC / YC-style evaluation
+### For builders and investors
 
 This is not just a dashboard. It is a wedge into prediction-market infrastructure:
 
@@ -176,10 +189,15 @@ Repository layout:
 |-- api/
 |   |-- state.py        # Aggregates Polymarket markets, events, trades, and watchlist
 |   `-- watchlist.py    # Watchlist CRUD using Vercel KV / Upstash Redis
+|-- .github/            # CI, issue templates, and PR template
 |-- docs/
-|   `-- screenshots/    # README screenshots
+|   |-- LAUNCH.md       # Public launch checklist and copy
+|   `-- screenshots/    # README screenshots and product tour
 |-- public/
 |   `-- index.html      # Single-page dashboard
+|-- scripts/
+|   `-- check_repo.py   # Zero-dependency repository quality checks
+|-- .env.example        # Vercel KV environment variable template
 |-- vercel.json         # Rewrites, CORS headers, and function limits
 `-- README.md
 ```
@@ -276,20 +294,34 @@ This repo is currently an open-source personal project, but the product directio
 - The open-source repo gives developers a reason to fork, star, and extend it.
 - Each new alert/channel integration creates another distribution surface.
 
-## Local Development
+## Quick Start
 
 Prerequisites:
 
-- Vercel CLI
 - Python 3.11+
-- Vercel KV / Upstash Redis for watchlist persistence
+- Current Vercel CLI for local serverless routing
+- `uv` on your PATH for the Vercel Python builder
+- Vercel KV / Upstash Redis if you want watchlist persistence
 
 Clone and run:
 
 ```bash
 git clone https://github.com/juliosuas/polymarket-desk.git
 cd polymarket-desk
+cp .env.example .env.local
 vercel dev
+```
+
+If `vercel dev` fails while trying to install `uv` into an externally managed Python, install `uv` directly first, for example with Homebrew:
+
+```bash
+brew install uv
+```
+
+If your local Vercel CLI asks `uv` for `--python 3.0`, upgrade the CLI and retry:
+
+```bash
+npm i -g vercel@latest
 ```
 
 The app runs at:
@@ -300,31 +332,65 @@ http://localhost:3000
 
 Without KV environment variables, market data can still render, but watchlist reads/writes will fail.
 
+Run the lightweight repository check:
+
+```bash
+python3 scripts/check_repo.py
+```
+
+## Local Development Notes
+
+The frontend is a single HTML file with embedded CSS and JavaScript. The API layer is two Vercel Python functions:
+
+- `api/state.py` aggregates market, event, trade, screen, and optional watchlist data.
+- `api/watchlist.py` stores and mutates per-token watchlist slugs in Vercel KV / Upstash Redis.
+
+This keeps the project easy to fork: no framework lock-in, no client build step, and no private Polymarket credentials.
+
 ## Environment Variables
 
 Production expects Vercel KV variables:
 
-```text
-KV_REST_API_URL
-KV_REST_API_TOKEN
-KV_REST_API_READ_ONLY_TOKEN
-```
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `KV_REST_API_URL` | Yes for watchlists | Upstash/Vercel KV REST endpoint |
+| `KV_REST_API_TOKEN` | Yes for watchlists | Read/write token for `/api/watchlist` |
+| `KV_REST_API_READ_ONLY_TOKEN` | Optional | Read-only token used by `/api/state` when resolving watchlists |
 
 When Vercel KV is connected through the Vercel dashboard, these are injected automatically.
+Market data itself uses public Polymarket endpoints and does not require private credentials.
 
 ## Deployment
 
-The project is configured for Vercel.
+The project is configured for Vercel. Deploy through Vercel Git integration or the CLI:
 
 ```bash
 vercel deploy --prod
 ```
+
+The included GitHub Actions deploy-hook workflow is manual (`workflow_dispatch`) so the public repo does not fail CI when a fork has no Vercel secret. If you want to use it, create a Vercel Deploy Hook and save it as `VERCEL_DEPLOY_HOOK_URL`.
 
 Current production URL:
 
 ```text
 https://polymarket-desk-seven.vercel.app
 ```
+
+## Contributing
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and keep the product boundary read-only unless a separate risk and compliance design exists.
+
+Good first areas:
+
+- Better market filters and ranking heuristics.
+- Alert integrations for Discord, Telegram, email, or webhooks.
+- Historical snapshots, charts, and daily digests.
+- More tests around API normalization and watchlist behavior.
+- Accessibility, mobile polish, and copy improvements.
+
+## Public Launch
+
+Use [docs/LAUNCH.md](docs/LAUNCH.md) before public posts, demo days, or community launches. It includes repository checks, product checks, suggested GitHub topics, and reusable launch copy.
 
 ## Roadmap
 
@@ -355,7 +421,8 @@ https://polymarket-desk-seven.vercel.app
 - No Polymarket API keys are required.
 - Watchlist state is keyed by opaque browser tokens.
 - Watchlist share links are bearer-style edit links.
-- `.env*.local` and `.vercel/` are ignored and should not be committed.
+- Real `.env` files and `.vercel/` are ignored and should not be committed.
+- Sensitive vulnerability reports should follow [SECURITY.md](SECURITY.md).
 
 ## Limitations
 
@@ -371,4 +438,6 @@ This project is for market monitoring and research. It is not financial advice, 
 
 ## License
 
-Personal project. Polymarket data belongs to its respective providers.
+MIT. See [LICENSE](LICENSE).
+
+Polymarket data belongs to its respective providers. This project is independent and is not affiliated with or endorsed by Polymarket.

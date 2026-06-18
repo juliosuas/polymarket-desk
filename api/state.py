@@ -89,7 +89,8 @@ def _get_json(url: str, timeout: int = 6, headers: dict | None = None):
 
 def _safe_float(value, default: float = 0.0) -> float:
     try:
-        return float(value or default)
+        number = float(default if value is None else value)
+        return number if math.isfinite(number) else default
     except (TypeError, ValueError):
         return default
 
@@ -104,6 +105,8 @@ def fetch_market(slug: str) -> dict | None:
         prices = json.loads(m.get("outcomePrices") or '["0","0"]')
         yes = float(prices[0])
         no = float(prices[1])
+        if not (math.isfinite(yes) and math.isfinite(no)):
+            return None
     except (IndexError, TypeError, ValueError, json.JSONDecodeError):
         return None
     end_raw = m.get("endDate")
@@ -144,6 +147,8 @@ def fetch_screen():
         try:
             prices = json.loads(m.get("outcomePrices") or '["0","0"]')
             yes = float(prices[0])
+            if not math.isfinite(yes):
+                continue
         except Exception:
             continue
         end_raw = m.get("endDate")
@@ -158,9 +163,9 @@ def fetch_screen():
             "question": (m.get("question") or "").strip(),
             "yes": yes,
             "days": days,
-            "vol24h": float(m.get("volume24hr") or 0),
-            "vol_total": float(m.get("volume") or 0),
-            "one_day_change": float(m.get("oneDayPriceChange") or 0),
+            "vol24h": _safe_float(m.get("volume24hr")),
+            "vol_total": _safe_float(m.get("volume")),
+            "one_day_change": _safe_float(m.get("oneDayPriceChange")),
             "slug": m.get("slug"),
         })
     return out
@@ -187,6 +192,8 @@ def fetch_events():
             try:
                 prices = json.loads(markets[0].get("outcomePrices") or '["0","0"]')
                 top_yes = float(prices[0])
+                if not math.isfinite(top_yes):
+                    top_yes = None
                 top_q = markets[0].get("question")
                 top_slug = markets[0].get("slug")
             except Exception:
@@ -194,7 +201,7 @@ def fetch_events():
         out.append({
             "title": (e.get("title") or "").strip(),
             "slug": e.get("slug"),
-            "volume24hr": float(e.get("volume24hr") or 0),
+            "volume24hr": _safe_float(e.get("volume24hr")),
             "n_markets": len(markets),
             "days": days,
             "top_yes": top_yes,
@@ -214,9 +221,9 @@ def fetch_trades():
             "slug": t.get("slug") or t.get("eventSlug"),
             "side": t.get("side"),
             "outcome": t.get("outcome"),
-            "size": float(t.get("size") or 0),
-            "price": float(t.get("price") or 0),
-            "ts": int(t.get("timestamp") or 0),
+            "size": _safe_float(t.get("size")),
+            "price": _safe_float(t.get("price")),
+            "ts": int(_safe_float(t.get("timestamp"))),
             "pseudonym": t.get("pseudonym") or t.get("name"),
         })
     return out

@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>POLYMARKET DESK</title>
+<meta name="description" content="A read-only desk for scanning Polymarket markets, 24h movers, live trade flow, and shareable watchlists.">
+<meta name="theme-color" content="#07090c">
+<link rel="canonical" href="https://polymarket-desk-seven.vercel.app/">
+<meta property="og:title" content="Polymarket Desk">
+<meta property="og:description" content="Prediction-market dashboard with top markets, catalysts, consensus screens, live tape, and watchlists.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://polymarket-desk-seven.vercel.app/">
+<meta name="twitter:card" content="summary">
 <style>
   :root {
     --bg: #07090c;
@@ -494,7 +502,18 @@ const fmt = {
   days(d) { return d == null ? '—' : d+'d'; },
   count(n) { return Number(n || 0).toLocaleString(); },
 };
-const escapeHtml = s => (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const escapeHtml = s => String(s||'').replace(/[&<>"']/g, c => (
+  {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+));
+function safeImageUrl(src) {
+  if (!src) return '';
+  try {
+    const url = new URL(src, window.location.origin);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch(e) {
+    return '';
+  }
+}
 
 //======================================================================
 // user identity (UUID in localStorage, or ?u= in URL)
@@ -636,17 +655,20 @@ async function toggleStar(slug) {
 window.toggleStar = toggleStar;
 
 function updateAllStars() {
-  document.querySelectorAll('[data-slug]').forEach(el => {
-    const on = watchlistSlugs.has(el.dataset.slug);
-    const target = el.matches('button') ? el : el.querySelector('button, span');
-    if (target) {
-      target.textContent = on ? '★' : '☆';
-      target.classList.toggle('on', on);
-      target.setAttribute('aria-pressed', on ? 'true' : 'false');
-      target.setAttribute('aria-label', on ? 'Remove from watchlist' : 'Add to watchlist');
-    }
+  document.querySelectorAll('button[data-slug]').forEach(btn => {
+    const on = watchlistSlugs.has(btn.dataset.slug);
+    btn.textContent = on ? '★' : '☆';
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.setAttribute('aria-label', on ? 'Remove from watchlist' : 'Add to watchlist');
   });
 }
+
+document.addEventListener('click', event => {
+  const btn = event.target.closest('button[data-slug]');
+  if (!btn) return;
+  toggleStar(btn.dataset.slug);
+});
 
 function updateBadge() {
   document.getElementById('wl-count').textContent = watchlistSlugs.size;
@@ -657,8 +679,8 @@ function starCell(slug) {
   if (!slug) return '<td></td>';
   const on = watchlistSlugs.has(slug);
   const slugEsc = escapeHtml(slug);
-  return `<td class="star" data-slug="${slugEsc}">
-    <button type="button" class="star-button ${on?'on':''}" aria-pressed="${on?'true':'false'}" aria-label="${on?'Remove from watchlist':'Add to watchlist'}" onclick="toggleStar('${slugEsc}')">${on?'★':'☆'}</button>
+  return `<td class="star">
+    <button type="button" class="star-button ${on?'on':''}" data-slug="${slugEsc}" aria-pressed="${on?'true':'false'}" aria-label="${on?'Remove from watchlist':'Add to watchlist'}">${on?'★':'☆'}</button>
   </td>`;
 }
 
@@ -721,7 +743,7 @@ function renderSafest(rows) {
     return `<div class="bet-card safe">
       <div class="q">
         <span>${escapeHtml(m.question || '')}</span>
-        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</button>
+        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}">${onWl?'★':'☆'}</button>
       </div>
       <div class="action">
         <span class="verb">LADO IMPLÍCITO</span>
@@ -759,7 +781,7 @@ function renderToday(rows) {
     return `<div class="bet-card today">
       <div class="q">
         <span>${escapeHtml(m.question || '')}</span>
-        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}" onclick="toggleStar('${slugEsc}')">${onWl?'★':'☆'}</button>
+        <button type="button" class="star-card ${onWl?'on':''}" data-slug="${slugEsc}" aria-pressed="${onWl?'true':'false'}" aria-label="${onWl?'Remove from watchlist':'Add to watchlist'}">${onWl?'★':'☆'}</button>
       </div>
       <div class="action" style="align-items:center;">
         <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
@@ -791,7 +813,7 @@ function renderWatchlist(wl) {
     return `<div class="bet-card yours">
       <div class="q">
         <span>${escapeHtml(m.question || '')}</span>
-        <button type="button" class="star-card on" data-slug="${slugEsc}" aria-pressed="true" aria-label="Remove from watchlist" onclick="toggleStar('${slugEsc}')">★</button>
+        <button type="button" class="star-card on" data-slug="${slugEsc}" aria-pressed="true" aria-label="Remove from watchlist">★</button>
       </div>
       <div class="action" style="align-items:center;">
         <span class="yes-big ${cls}">${fmt.pct(m.yes)}</span>
@@ -809,7 +831,8 @@ function renderEvents(events) {
   const wrap = document.getElementById('events-list');
   if (!events.length) { wrap.innerHTML = '<div class="loading">no events</div>'; return; }
   wrap.innerHTML = events.map(e => {
-    const img = e.image ? `<img src="${e.image}" onerror="this.style.visibility='hidden'">` : '<div></div>';
+    const imageUrl = safeImageUrl(e.image);
+    const img = imageUrl ? `<img src="${escapeHtml(imageUrl)}" alt="" onerror="this.style.visibility='hidden'">` : '<div></div>';
     const sub = `${e.n_markets} mkts · ${e.days != null ? e.days+'d':'—'}` +
       (e.top_yes != null ? ` · top YES ${fmt.pct(e.top_yes)}` : '');
     return `<div class="event-row">
