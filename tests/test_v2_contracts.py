@@ -127,6 +127,29 @@ class MarketEndpointContractTests(unittest.TestCase):
                     validate_slug(bad_slug)
 
 
+class MarketNormalizationContractTests(unittest.TestCase):
+    def test_normalized_market_preserves_clob_trade_fields(self):
+        common = import_optional("api.common")
+        normalize_market = helper(common, "normalize_market")
+        now = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+        raw = {
+            "question": "Will BTC close above 100k?",
+            "slug": "will-btc-close-above-100k",
+            "outcomePrices": "[\"0.42\", \"0.58\"]",
+            "outcomes": "[\"Yes\", \"No\"]",
+            "clobTokenIds": "[\"yes-token\", \"no-token\"]",
+            "marketUrl": "https://polymarket.com/market/will-btc-close-above-100k",
+            "endDate": "2026-02-01T00:00:00Z",
+            "active": True,
+        }
+
+        normalized = normalize_market(raw, now=now)
+        self.assertIsNotNone(normalized)
+        self.assertEqual(normalized["outcomes"], ["Yes", "No"])
+        self.assertEqual(normalized["clob_token_ids"], ["yes-token", "no-token"])
+        self.assertEqual(normalized["market_url"], raw["marketUrl"])
+
+
 class NamedWatchlistContractTests(unittest.TestCase):
     def test_named_watchlist_schema_helper(self):
         watchlists = import_optional("api.watchlists", "api.named_watchlists")

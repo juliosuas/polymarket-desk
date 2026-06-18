@@ -319,6 +319,8 @@ def normalize_market(raw: dict[str, Any] | None, now: datetime | None = None) ->
         "image": raw.get("icon") or raw.get("image"),
         "event_slug": raw.get("eventSlug") or raw.get("event_slug"),
         "outcomes": parse_json_field(raw.get("outcomes"), []),
+        "clob_token_ids": parse_json_field(raw.get("clobTokenIds") or raw.get("clob_token_ids"), []),
+        "market_url": raw.get("marketUrl") or raw.get("url"),
         "active": active,
         "closed": closed,
         "archived": archived,

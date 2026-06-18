@@ -352,6 +352,23 @@
   .drawer-stat .v { color:var(--fg); font-size:15px; font-weight:700; font-variant-numeric:tabular-nums; }
   .drawer-note { color: var(--mut); font-size: 11px; border-top: 1px solid var(--line);
     margin-top: 12px; padding-top: 10px; }
+  .trade-ticket { border:1px solid var(--line); background:#0b1016; border-radius:5px;
+    margin-top:12px; padding:11px; }
+  .trade-ticket h3 { margin:0 0 8px; color:var(--amber); font-size:10px;
+    letter-spacing:.15em; }
+  .side-toggle { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:8px; }
+  .side-toggle button { border:1px solid var(--line); background:var(--panel2); color:var(--fg);
+    border-radius:4px; padding:8px; cursor:pointer; font-size:11px; }
+  .side-toggle button.active { border-color:var(--amber); color:var(--amber); }
+  .trade-fields { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .trade-fields label { display:block; color:var(--mut); font-size:9.5px;
+    letter-spacing:.12em; text-transform:uppercase; }
+  .trade-fields input { width:100%; margin-top:4px; background:var(--panel2); border:1px solid var(--line);
+    color:var(--fg); border-radius:4px; padding:7px; font-size:11px; }
+  .trade-preview { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:9px 0; }
+  .trade-preview div { border:1px solid var(--line); border-radius:4px; padding:7px; }
+  .trade-preview .k { color:var(--mut); font-size:9px; letter-spacing:.12em; text-transform:uppercase; }
+  .trade-preview .v { color:var(--fg); font-size:12px; font-weight:700; }
 </style>
 </head>
 <body>
@@ -1969,6 +1986,78 @@ const marketDrawer = document.getElementById('market-drawer');
 const marketBackdrop = document.getElementById('market-backdrop');
 const marketDrawerBody = document.getElementById('market-drawer-body');
 const drawerRoute = document.getElementById('drawer-route');
+let tradeSide = 'YES';
+let tradeSize = 10;
+
+function outcomeTokenId(m, side) {
+  const outcomes = Array.isArray(m.outcomes) ? m.outcomes : [];
+  const tokenIds = Array.isArray(m.clob_token_ids) ? m.clob_token_ids : [];
+  const wanted = String(side || 'YES').toLowerCase();
+  const index = outcomes.findIndex(outcome => String(outcome).toLowerCase() === wanted);
+  const fallbackIndex = wanted === 'no' ? 1 : 0;
+  return tokenIds[index >= 0 ? index : fallbackIndex] || '';
+}
+
+function tradePriceForSide(m, side) {
+  if (side === 'NO') {
+    if (Number(m.no)) return Number(m.no);
+    if (Number(m.yes)) return Math.max(0, Math.min(1, 1 - Number(m.yes)));
+  }
+  return Number(m.yes || m.last_trade || 0);
+}
+
+function tradePayload(m, side, size, price) {
+  return {
+    intent_only: true,
+    venue: 'polymarket',
+    slug: m.slug,
+    question: m.question,
+    side: 'BUY',
+    outcome: side,
+    token_id: outcomeTokenId(m, side),
+    limit_price: Number(price.toFixed(4)),
+    size: Number(size.toFixed(2)),
+    estimated_cost: Number((size * price).toFixed(2)),
+    signer_required: true,
+    auth: 'User signs on Polymarket/CLOB. Polymarket Desk does not store private keys or L2 credentials.',
+  };
+}
+
+function renderTradeTicket(m) {
+  const side = tradeSide === 'NO' ? 'NO' : 'YES';
+  const price = tradePriceForSide(m, side);
+  const size = Number(tradeSize || 0);
+  const cost = Math.max(0, size * price);
+  const maxPayout = Math.max(0, size - cost);
+  const tokenId = outcomeTokenId(m, side);
+  return `<div class="trade-ticket" data-trade-ticket="${escapeHtml(m.slug || '')}">
+    <h3>FAST BET TICKET</h3>
+    <div class="side-toggle">
+      <button type="button" data-trade-side="YES" class="${side === 'YES' ? 'active' : ''}">BUY YES · ${fmt.pct(m.yes)}</button>
+      <button type="button" data-trade-side="NO" class="${side === 'NO' ? 'active' : ''}">BUY NO · ${fmt.pct(m.no != null ? m.no : 1 - Number(m.yes || 0))}</button>
+    </div>
+    <div class="trade-fields">
+      <label>
+        Shares
+        <input data-trade-size="${escapeHtml(m.slug || '')}" inputmode="decimal" value="${escapeHtml(size || 10)}">
+      </label>
+      <label>
+        Indicative price
+        <input readonly value="${escapeHtml((price * 100).toFixed(1) + '¢')}">
+      </label>
+    </div>
+    <div class="trade-preview">
+      <div><div class="k">Cost</div><div class="v">${fmt.vol(cost)}</div></div>
+      <div><div class="k">Max profit</div><div class="v">${fmt.vol(maxPayout)}</div></div>
+      <div><div class="k">Token</div><div class="v">${tokenId ? 'READY' : 'OPEN'}</div></div>
+    </div>
+    <div class="control-row compact">
+      <a class="tool-button" href="${escapeHtml('https://polymarket.com/market/' + encodeURIComponent(m.slug || ''))}" target="_blank" rel="noopener noreferrer" data-polymarket-trade="${escapeHtml(m.slug || '')}">TRADE ON POLYMARKET</a>
+      <button class="tool-button" type="button" data-copy-trade="${escapeHtml(m.slug || '')}">COPY CLOB INTENT</button>
+    </div>
+    <div class="drawer-note">Execution requires the user's Polymarket wallet/signature. This desk prepares intent only; it never stores private keys, API secrets, or places orders.</div>
+  </div>`;
+}
 
 function marketRouteUrl(slug) {
   const url = new URL(window.location.href);
@@ -2039,6 +2128,7 @@ function renderMarketDrawer(m, note = '') {
   const watchAction = isReadOnlyDesk()
     ? `<button class="tool-button" type="button" data-clone-market="${slugEsc}">CLONE MARKET</button>`
     : `<button class="tool-button" type="button" data-drawer-watch="${slugEsc}" aria-pressed="${watchlistSlugs.has(slug)?'true':'false'}">${watchlistSlugs.has(slug)?'REMOVE':'ADD'} WATCH</button>`;
+  const ticketHtml = renderTradeTicket({...m, slug, question: title});
   drawerRoute.textContent = slug ? `?m=${slug}` : 'Market route';
   marketDrawerBody.innerHTML = `
     ${image}
@@ -2058,6 +2148,7 @@ function renderMarketDrawer(m, note = '') {
       <button class="tool-button" type="button" data-alert-market="${slugEsc}">CREATE ALERT</button>
       <button class="tool-button" type="button" data-copy-market="${slugEsc}">COPY MARKET LINK</button>
     </div>
+    ${ticketHtml}
     ${tradeHtml}
     ${relatedHtml}
     <div class="drawer-note">${escapeHtml(note || 'Detail data comes from /api/market when available, with the current screen cache as fallback.')}</div>`;
@@ -2174,6 +2265,30 @@ document.addEventListener('click', event => {
     track('share_copy', {mode: 'market', slug});
     return;
   }
+  const sideButton = event.target.closest('[data-trade-side]');
+  if (sideButton) {
+    tradeSide = sideButton.dataset.tradeSide === 'NO' ? 'NO' : 'YES';
+    if (marketCache.has(currentMarketSlug)) renderMarketDrawer(marketCache.get(currentMarketSlug));
+    track('trade_ticket_side', {side: tradeSide});
+    return;
+  }
+  const copyTrade = event.target.closest('[data-copy-trade]');
+  if (copyTrade) {
+    const slug = cleanSlug(copyTrade.dataset.copyTrade);
+    const market = marketCache.get(slug) || marketCache.get(currentMarketSlug);
+    if (market) {
+      const price = tradePriceForSide(market, tradeSide);
+      const payload = tradePayload(market, tradeSide, Number(tradeSize || 10), price);
+      copyText(JSON.stringify(payload, null, 2), copyTrade, 'COPIED');
+      track('trade_intent_copy', {slug, side: tradeSide});
+    }
+    return;
+  }
+  const tradeLink = event.target.closest('[data-polymarket-trade]');
+  if (tradeLink) {
+    track('trade_launch', {slug: tradeLink.dataset.polymarketTrade, side: tradeSide});
+    return;
+  }
   const relatedMarket = event.target.closest('[data-related-market]');
   if (relatedMarket) {
     openMarket(relatedMarket.dataset.relatedMarket, {source:'related'});
@@ -2182,6 +2297,15 @@ document.addEventListener('click', event => {
   if (event.target.closest('button, a, input, select, textarea, label')) return;
   const marketEl = event.target.closest('[data-market-slug]');
   if (marketEl) openMarket(marketEl.dataset.marketSlug, {source:'click'});
+});
+
+document.addEventListener('change', event => {
+  const sizeInput = event.target.closest('[data-trade-size]');
+  if (!sizeInput) return;
+  const parsed = Number(String(sizeInput.value || '').replace(',', '.'));
+  tradeSize = Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 100000) : 10;
+  const market = marketCache.get(sizeInput.dataset.tradeSize || currentMarketSlug);
+  if (market) renderMarketDrawer(market);
 });
 
 document.addEventListener('keydown', event => {
