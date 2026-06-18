@@ -202,6 +202,7 @@ def fetch_screen():
             "vol_total": _safe_float(m.get("volume")),
             "one_day_change": _safe_float(m.get("oneDayPriceChange")),
             "slug": m.get("slug"),
+            "image": m.get("icon") or m.get("image"),
         })
     return out
 
