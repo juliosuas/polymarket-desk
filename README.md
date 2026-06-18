@@ -28,7 +28,8 @@ Track Polymarket flow, spot sharp 24h moves, surface extreme consensus probabili
 | Consensus screens | Find markets priced near certainty but still unresolved |
 | Probability edges | Surface extreme-price candidates worth deeper research |
 | Live tape | Watch public trades print in real time |
-| Shareable watchlists | Track and share a market set without accounts or wallets |
+| Optional accounts | Sign in with a handle/password to carry watchlists and alerts across devices |
+| Shareable watchlists | Track and share a market set with account-backed or anonymous desks |
 | Market detail | Inspect price, spread, liquidity, close time, recent trades, related markets, alerts, and watch actions |
 | Probability ticket | Pick YES/NO, choose max spend, copy an order-intent plan, and open Polymarket to sign |
 | Market Pit | Vote YES/NO with conviction and chat per market with anonymous aliases |
@@ -45,7 +46,7 @@ Polymarket Desk turns public market data into an **open-source operator console*
 - See what the market is paying attention to.
 - Catch 24h price dislocations before they disappear.
 - Watch trade flow print live.
-- Save and share a watchlist without creating an account.
+- Save and share a watchlist anonymously, or sign in to keep it across devices.
 - Use the dashboard as a base layer for daily briefs, alerts, analytics, newsletters, bots, public desks, safer trade workflows, or paid tooling.
 
 ## Why It Matters
@@ -170,7 +171,7 @@ These features should preserve the current boundary: Polymarket Desk can prepare
 
 - **Fast market triage**: scan top markets, events, movers, and trade flow from one page.
 - **Probability discovery**: rank markets with extreme implied probabilities and real liquidity.
-- **Zero-login watchlists**: browser-generated token, backed by KV, shareable by URL.
+- **Optional login**: browser-generated tokens still work, while handle/password accounts recover a stable account token across devices.
 - **Serverless data layer**: Python functions aggregate public Polymarket APIs.
 - **No build pipeline**: vanilla HTML/CSS/JS frontend, deployable directly on Vercel.
 - **Non-custodial by design**: no trading keys, no wallet connection, no server-side order execution.
@@ -303,6 +304,20 @@ Representative fields:
 
 Returns one market detail payload with normalized market fields, recent trades, related markets, and optional history. The frontend uses this for the market drawer and probability ticket.
 
+### `GET /api/auth?u=<account-token>`
+
+Resolves the current lightweight account profile for a signed-in desk.
+
+### `POST /api/auth`
+
+Creates or opens a lightweight account with a handle and password.
+
+```json
+{ "action": "signup", "handle": "probtrader", "password": "8+ characters", "adopt_token": "optional-anonymous-token" }
+```
+
+Passwords are stored as PBKDF2-SHA256 hashes. The endpoint returns a stable `acct_...` token that the existing watchlist, alert, and Market Pit APIs use as `u=<token>`.
+
 ### `GET /api/watchlists?u=<token>`
 
 Returns named watchlists for a browser token.
@@ -373,15 +388,15 @@ Records aggregate, privacy-light product events. Do not send raw watchlist token
 
 ## User Identity Model
 
-There is no login system. On first load, the browser generates a UUID and stores it in:
+Polymarket Desk supports both anonymous and signed-in desks. On first load, the browser generates an anonymous UUID and stores it in:
 
 ```text
 localStorage["polydash_user"]
 ```
 
-That token is sent as `?u=<token>` to the API. The share action copies a URL containing the token, which lets another browser or device adopt the same watchlist.
+That token is sent as `?u=<token>` to the API. If the user creates or opens an account, `/api/auth` returns a stable `acct_...` token and the frontend replaces the anonymous token after optionally migrating watchlists and alerts.
 
-Treat watchlist links as bearer-style edit links. Anyone with the token can view and modify that watchlist.
+Treat edit links and account tokens as bearer-style secrets. Anyone with an edit token can view and modify that desk. Account passwords are hashed server-side; Polymarket Desk still does not store wallets, Polymarket credentials, private keys, IPs, or user agents.
 
 ## Probability Edges Scoring
 

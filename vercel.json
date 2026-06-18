@@ -14,6 +14,7 @@
     }
   ],
   "functions": {
+    "api/auth.py": { "maxDuration": 10 },
     "api/desk.py": { "maxDuration": 15 },
     "api/community.py": { "maxDuration": 10 },
     "api/alerts.py": { "maxDuration": 10 },

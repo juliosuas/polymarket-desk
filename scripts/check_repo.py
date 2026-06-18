@@ -29,6 +29,11 @@ REQUIRED_FILES = [
 ]
 
 V2_OPTIONAL_ENDPOINTS = {
+    "api/auth.py": {
+        "endpoint": "/api/auth",
+        "methods": ["do_GET", "do_POST"],
+        "purpose": "lightweight account signup/login and account-token lookup",
+    },
     "api/market.py": {
         "endpoint": "/api/market?slug=<market-slug>",
         "methods": ["do_GET"],

@@ -81,6 +81,10 @@
   }
   header .meta { color: var(--mut); font-size: 11px; }
   header .actions { display:flex; gap:10px; align-items:center; flex-wrap: wrap; justify-content: flex-end; }
+  .account-pill { border:1px solid var(--line); border-radius:9999px; padding:4px 8px;
+    color:var(--mut); font-size:10px; letter-spacing:.1em; font-weight:800; max-width:140px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .account-pill.signed-in { border-color:rgba(34,197,94,.35); color:var(--green); }
   button, input, select, textarea { font-family: var(--sans); }
   header button, .tool-button { background: var(--panel2); color: var(--fg);
     border: 1px solid var(--line); padding: 6px 14px; cursor: pointer;
@@ -89,6 +93,40 @@
   header button:hover, .tool-button:hover,
   header button:focus-visible, .tool-button:focus-visible { border-color: var(--amber); color: var(--amber); outline: none; }
   .tool-button:disabled { cursor: not-allowed; opacity: .45; border-color: var(--line); color: var(--mut); }
+
+  .auth-backdrop { position: fixed; inset: 0; z-index: 220; background: rgba(0,0,0,.58); }
+  .auth-backdrop[hidden], .auth-dialog[hidden] { display:none; }
+  .auth-dialog { position: fixed; top: 76px; right: 22px; z-index: 230; width: min(390px, calc(100vw - 28px));
+    border:1px solid var(--line); border-radius:8px; background:var(--panel);
+    box-shadow:0 24px 80px rgba(0,0,0,.44); overflow:hidden; }
+  .auth-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start;
+    padding:14px 15px; border-bottom:1px solid var(--line); background:var(--panel2); }
+  .auth-head h2 { margin:0; color:var(--amber); font-size:11px; letter-spacing:.16em; }
+  .auth-head p { margin:3px 0 0; color:var(--mut); font-size:11px; }
+  .auth-body { padding:14px 15px; }
+  .auth-tabs { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px; }
+  .auth-tabs button { border:1px solid var(--line); background:var(--panel2); color:var(--fg);
+    border-radius:4px; padding:8px; cursor:pointer; font-size:10.5px; letter-spacing:.08em; font-weight:800; }
+  .auth-tabs button.active, .auth-tabs button:hover, .auth-tabs button:focus-visible {
+    border-color:var(--amber); color:var(--amber); outline:none; }
+  .auth-field { display:block; color:var(--mut); font-size:9.5px; letter-spacing:.12em;
+    text-transform:uppercase; margin-bottom:9px; }
+  .auth-field input { width:100%; margin-top:5px; background:var(--panel2); border:1px solid var(--line);
+    color:var(--fg); border-radius:4px; padding:8px; font-size:12px; outline:none; letter-spacing:0;
+    text-transform:none; }
+  .auth-field input:focus { border-color:var(--amber); }
+  .auth-check { display:flex; gap:8px; align-items:flex-start; color:var(--mut); font-size:11px; margin:4px 0 12px; }
+  .auth-check input { margin-top:2px; accent-color:var(--amber); }
+  .auth-current { border:1px solid var(--line); background:#0b1016; border-radius:5px;
+    padding:10px; margin-bottom:10px; }
+  .auth-current .k { color:var(--mut); font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; }
+  .auth-current .v { color:var(--fg); font-size:14px; font-weight:800; overflow-wrap:anywhere; }
+  .auth-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .auth-message { min-height:17px; margin-top:10px; color:var(--mut); font-size:11px; }
+  .auth-message.error { color:var(--red); }
+  @media (max-width: 640px) {
+    .auth-dialog { top: 88px; right: 14px; }
+  }
 
   main { padding: 16px 22px; min-width: 0; }
   @media (max-width: 640px) {
@@ -522,6 +560,8 @@
   </div>
   <div class="actions">
     <span class="meta" id="poll-info">poll · 5s</span>
+    <span class="account-pill" id="auth-status">ANON</span>
+    <button id="auth-open" type="button">SIGN IN</button>
     <button id="refresh">REFRESH</button>
   </div>
 </header>
@@ -857,6 +897,48 @@
   </div>
 </aside>
 
+<div class="auth-backdrop" id="auth-backdrop" hidden></div>
+<section class="auth-dialog" id="auth-dialog" hidden aria-label="Account sign in">
+  <div class="auth-head">
+    <div>
+      <h2 id="auth-title">SIGN IN</h2>
+      <p id="auth-subtitle">Save your desk across devices without connecting a wallet.</p>
+    </div>
+    <button class="drawer-close" type="button" id="auth-close" aria-label="Close sign in">CLOSE</button>
+  </div>
+  <div class="auth-body">
+    <div class="auth-current" id="auth-current" hidden>
+      <div class="k">Signed in as</div>
+      <div class="v" id="auth-current-handle">Account</div>
+    </div>
+    <div class="auth-tabs" id="auth-tabs">
+      <button type="button" data-auth-tab="login" class="active">SIGN IN</button>
+      <button type="button" data-auth-tab="signup">CREATE</button>
+    </div>
+    <form id="auth-form">
+      <label class="auth-field">
+        Handle
+        <input id="auth-handle" autocomplete="username" maxlength="32" placeholder="probtrader">
+      </label>
+      <label class="auth-field">
+        Password
+        <input id="auth-password" type="password" autocomplete="current-password" minlength="8" maxlength="128" placeholder="8+ characters">
+      </label>
+      <label class="auth-check" id="auth-adopt-row">
+        <input id="auth-adopt" type="checkbox" checked>
+        <span>Move this anonymous desk into the account.</span>
+      </label>
+      <div class="auth-actions">
+        <button class="tool-button" type="submit" id="auth-submit">SIGN IN</button>
+      </div>
+    </form>
+    <div class="auth-actions">
+      <button class="tool-button" type="button" id="auth-logout" hidden>LOG OUT</button>
+    </div>
+    <div class="auth-message" id="auth-message">Anonymous mode still works; accounts are only for saving your desk.</div>
+  </div>
+</section>
+
 <script>
 //======================================================================
 // utils
@@ -1020,16 +1102,38 @@ function track(event, props = {}) {
 }
 
 //======================================================================
-// user identity (UUID in localStorage, or ?u= in URL)
+// user identity (anonymous UUID or account token)
 //======================================================================
+const AUTH_USER_KEY = 'polydash_auth_user';
+const PENDING_EDIT_TOKEN_KEY = 'polydash_pending_edit_token';
+
+function storedAuthProfile() {
+  const profile = readStoredJson(AUTH_USER_KEY, null);
+  return profile && typeof profile === 'object' ? profile : null;
+}
+function isAccountToken(token) {
+  return /^acct_[a-zA-Z0-9_-]{16,60}$/.test(String(token || ''));
+}
 function ensureToken() {
   const url = new URL(window.location.href);
+  const auth = storedAuthProfile();
   let t = url.searchParams.get('u');
   if (t) {
+    if (auth?.token && isAccountToken(auth.token) && auth.token !== t) {
+      localStorage.setItem(PENDING_EDIT_TOKEN_KEY, t);
+      localStorage.setItem('polydash_user', auth.token);
+      url.searchParams.delete('u');
+      history.replaceState({}, '', url.toString());
+      return auth.token;
+    }
     localStorage.setItem('polydash_user', t);
     url.searchParams.delete('u');
     history.replaceState({}, '', url.toString());
     return t;
+  }
+  if (auth?.token && isAccountToken(auth.token)) {
+    localStorage.setItem('polydash_user', auth.token);
+    return auth.token;
   }
   t = localStorage.getItem('polydash_user');
   if (!t) {
@@ -1040,6 +1144,7 @@ function ensureToken() {
   return t;
 }
 const USER_TOKEN = ensureToken();
+let authProfile = storedAuthProfile();
 
 //======================================================================
 // state cache (for animations)
@@ -1096,6 +1201,25 @@ const watchlistTools = document.getElementById('watchlist-tools');
 const watchlistToolsState = document.getElementById('watchlist-tools-state');
 const alertsPanel = document.getElementById('alerts-panel');
 const alertsPanelState = document.getElementById('alerts-panel-state');
+const authStatus = document.getElementById('auth-status');
+const authOpenButton = document.getElementById('auth-open');
+const authBackdrop = document.getElementById('auth-backdrop');
+const authDialog = document.getElementById('auth-dialog');
+const authCloseButton = document.getElementById('auth-close');
+const authTitle = document.getElementById('auth-title');
+const authSubtitle = document.getElementById('auth-subtitle');
+const authTabs = document.getElementById('auth-tabs');
+const authForm = document.getElementById('auth-form');
+const authHandleInput = document.getElementById('auth-handle');
+const authPasswordInput = document.getElementById('auth-password');
+const authAdoptRow = document.getElementById('auth-adopt-row');
+const authAdoptInput = document.getElementById('auth-adopt');
+const authSubmitButton = document.getElementById('auth-submit');
+const authLogoutButton = document.getElementById('auth-logout');
+const authMessage = document.getElementById('auth-message');
+const authCurrent = document.getElementById('auth-current');
+const authCurrentHandle = document.getElementById('auth-current-handle');
+let authMode = 'login';
 
 function panelStateText(count, singular, plural = singular + 's') {
   return `${fmt.count(count)} ${count === 1 ? singular : plural}`;
@@ -1143,6 +1267,137 @@ function watchlistApiUrl(extra = '') {
 
 function setHint(message) {
   shareCopy.textContent = message;
+}
+
+function signedInUser() {
+  return authProfile && authProfile.token === USER_TOKEN && isAccountToken(USER_TOKEN) ? authProfile : null;
+}
+
+function setAuthMessage(message, isError = false) {
+  if (!authMessage) return;
+  authMessage.textContent = message || '';
+  authMessage.classList.toggle('error', Boolean(isError));
+}
+
+function renderAuthState() {
+  const user = signedInUser();
+  if (authStatus) {
+    authStatus.textContent = user ? user.handle : 'ANON DESK';
+    authStatus.classList.toggle('signed-in', Boolean(user));
+    authStatus.title = user ? 'Signed in account' : 'Anonymous local desk';
+  }
+  if (authOpenButton) authOpenButton.textContent = user ? 'ACCOUNT' : 'SIGN IN';
+  if (authCurrent) authCurrent.hidden = !user;
+  if (authCurrentHandle) authCurrentHandle.textContent = user?.handle || 'Account';
+  if (authTabs) authTabs.hidden = Boolean(user);
+  if (authForm) authForm.hidden = Boolean(user);
+  if (authLogoutButton) authLogoutButton.hidden = !user;
+  if (authAdoptRow) authAdoptRow.hidden = isAccountToken(USER_TOKEN);
+
+  const pending = localStorage.getItem(PENDING_EDIT_TOKEN_KEY);
+  if (pending && user) {
+    setHint('Edit link detected while signed in. Sign out first if you want to adopt that token.');
+  }
+}
+
+function setAuthMode(mode) {
+  authMode = mode === 'signup' ? 'signup' : 'login';
+  if (authTitle) authTitle.textContent = authMode === 'signup' ? 'CREATE ACCOUNT' : 'SIGN IN';
+  if (authSubtitle) {
+    authSubtitle.textContent = authMode === 'signup'
+      ? 'Create a portable desk with a handle and password.'
+      : 'Open your saved watchlists and alerts on this device.';
+  }
+  if (authSubmitButton) authSubmitButton.textContent = authMode === 'signup' ? 'CREATE ACCOUNT' : 'SIGN IN';
+  if (authPasswordInput) authPasswordInput.autocomplete = authMode === 'signup' ? 'new-password' : 'current-password';
+  document.querySelectorAll('[data-auth-tab]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.authTab === authMode);
+  });
+  setAuthMessage(authMode === 'signup'
+    ? 'Password is stored as a PBKDF2 hash. No wallet connection is needed.'
+    : 'Anonymous mode still works; sign in only when you want portability.');
+}
+
+function openAuthDialog(mode = 'login') {
+  renderAuthState();
+  setAuthMode(mode);
+  if (signedInUser()) setAuthMessage('Your desk is signed in. Log out to return to anonymous mode.');
+  authBackdrop.hidden = false;
+  authDialog.hidden = false;
+  if (!signedInUser()) setTimeout(() => authHandleInput?.focus(), 0);
+}
+
+function closeAuthDialog() {
+  authBackdrop.hidden = true;
+  authDialog.hidden = true;
+}
+
+async function refreshAuthProfile() {
+  if (!isAccountToken(USER_TOKEN)) {
+    renderAuthState();
+    return;
+  }
+  try {
+    const r = await fetch('/api/auth?u=' + encodeURIComponent(USER_TOKEN), {cache:'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (data.authenticated && data.user) {
+      authProfile = data.user;
+      writeStoredJson(AUTH_USER_KEY, authProfile);
+    } else {
+      authProfile = null;
+      localStorage.removeItem(AUTH_USER_KEY);
+    }
+  } catch(e) {
+    if (authProfile?.token !== USER_TOKEN) authProfile = null;
+  }
+  renderAuthState();
+}
+
+async function submitAuth(event) {
+  event.preventDefault();
+  const handle = authHandleInput.value.trim();
+  const password = authPasswordInput.value;
+  const adopt = authAdoptInput.checked && !isAccountToken(USER_TOKEN) ? USER_TOKEN : '';
+  if (!handle || !password) {
+    setAuthMessage('Enter a handle and password.', true);
+    return;
+  }
+  authSubmitButton.disabled = true;
+  setAuthMessage(authMode === 'signup' ? 'Creating account…' : 'Signing in…');
+  try {
+    const r = await fetch('/api/auth', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action: authMode, handle, password, adopt_token: adopt}),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'Authentication failed');
+    if (!data.user?.token) throw new Error('Auth response did not include a user token');
+    authProfile = data.user;
+    writeStoredJson(AUTH_USER_KEY, authProfile);
+    localStorage.setItem('polydash_user', authProfile.token);
+    localStorage.removeItem(PENDING_EDIT_TOKEN_KEY);
+    track(authMode === 'signup' ? 'auth_signup' : 'auth_login', {
+      migrated: Boolean(data.migration?.migrated),
+    });
+    setAuthMessage('Signed in. Reloading your desk…');
+    setTimeout(() => window.location.reload(), 450);
+  } catch(e) {
+    setAuthMessage(e.message || 'Authentication failed.', true);
+  } finally {
+    authSubmitButton.disabled = false;
+  }
+}
+
+function logoutAuth() {
+  authProfile = null;
+  localStorage.removeItem(AUTH_USER_KEY);
+  localStorage.removeItem('polydash_user');
+  localStorage.removeItem(PENDING_EDIT_TOKEN_KEY);
+  track('auth_logout');
+  setAuthMessage('Logged out. Reloading anonymous desk…');
+  setTimeout(() => window.location.reload(), 250);
 }
 
 function updateDeskChrome() {
@@ -1494,7 +1749,17 @@ saveWatchlistNameButton.addEventListener('click', () => {
 watchlistNameInput.addEventListener('keydown', event => {
   if (event.key === 'Enter') saveWatchlistNameButton.click();
 });
+authOpenButton.addEventListener('click', () => openAuthDialog(signedInUser() ? 'login' : authMode));
+authCloseButton.addEventListener('click', closeAuthDialog);
+authBackdrop.addEventListener('click', closeAuthDialog);
+authTabs.addEventListener('click', event => {
+  const tab = event.target.closest('[data-auth-tab]');
+  if (tab) setAuthMode(tab.dataset.authTab);
+});
+authForm.addEventListener('submit', submitAuth);
+authLogoutButton.addEventListener('click', logoutAuth);
 updateDeskChrome();
+renderAuthState();
 
 //======================================================================
 // polling
@@ -2861,6 +3126,10 @@ document.addEventListener('change', event => {
 });
 
 document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !authDialog.hidden) {
+    closeAuthDialog();
+    return;
+  }
   if (event.key === 'Escape' && marketDrawer.classList.contains('open')) {
     closeMarketDrawer(true);
     return;
@@ -2872,6 +3141,7 @@ document.addEventListener('keydown', event => {
 });
 
 function init() {
+  refreshAuthProfile();
   loadAlerts();
   loadWatchlists();
   if (routeState.desk) loadPublicDesk(routeState.desk);

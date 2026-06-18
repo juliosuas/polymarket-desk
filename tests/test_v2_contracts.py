@@ -246,6 +246,79 @@ class AnalyticsContractTests(unittest.TestCase):
         self.assertNotIn(">", str(cleaned.get("event", "")))
 
 
+class AuthContractTests(unittest.TestCase):
+    def test_auth_payload_validates_handle_password_and_adopt_token(self):
+        auth = import_optional("api.auth")
+        normalize = helper(auth, "normalize_auth_payload")
+
+        payload = normalize(
+            {
+                "action": "signup",
+                "handle": "ProbTrader_7",
+                "password": "correct horse",
+                "adopt_token": "anon12345",
+            }
+        )
+        self.assertEqual(payload["action"], "signup")
+        self.assertEqual(payload["handle"], "probtrader_7")
+        self.assertEqual(payload["handle_display"], "ProbTrader_7")
+        self.assertEqual(payload["adopt_token"], "anon12345")
+
+        bad_payloads = (
+            {"action": "signup", "handle": "1bad", "password": "correct horse"},
+            {"action": "login", "handle": "okhandle", "password": "short"},
+            {"action": "delete", "handle": "okhandle", "password": "correct horse"},
+            {"action": "login", "handle": "okhandle", "password": "correct horse", "adopt_token": "bad"},
+        )
+        for bad_payload in bad_payloads:
+            with self.subTest(payload=bad_payload):
+                with self.assertRaises((TypeError, ValueError)):
+                    normalize(bad_payload)
+
+    def test_auth_password_hash_verifies_without_exposing_hash(self):
+        auth = import_optional("api.auth")
+        hash_password = helper(auth, "hash_password")
+        verify_password = helper(auth, "verify_password")
+        public_user = helper(auth, "public_user")
+
+        stored = hash_password("correct horse battery", salt=b"1234567890abcdef", iterations=1000)
+        self.assertTrue(verify_password("correct horse battery", stored))
+        self.assertFalse(verify_password("wrong horse battery", stored))
+
+        profile = public_user(
+            {
+                "handle": "probtrader",
+                "handle_display": "ProbTrader",
+                "token": "acct_1234567890abcdef",
+                "password_hash": stored,
+                "created_at": "2026-01-01T00:00:00+00:00",
+            }
+        )
+        self.assertEqual(profile["handle"], "ProbTrader")
+        self.assertEqual(profile["token"], "acct_1234567890abcdef")
+        self.assertNotIn("password_hash", profile)
+
+    def test_auth_rate_limit_helper_blocks_repeated_failures(self):
+        auth = import_optional("api.auth")
+        limited = helper(auth, "login_is_limited")
+
+        now = 1_000_000.0
+        self.assertFalse(limited({"failed": 4, "first_failed_at": now - 60}, now=now))
+        self.assertTrue(limited({"failed": 5, "first_failed_at": now - 60}, now=now))
+        self.assertFalse(limited({"failed": 5, "first_failed_at": now - 700}, now=now))
+
+    def test_auth_slug_merge_preserves_target_and_caps(self):
+        auth = import_optional("api.auth")
+        merge = helper(auth, "_merge_slugs")
+
+        target = ["will-fed-cut-rates", "will-btc-hit-100k"]
+        source = ["will-btc-hit-100k", "../secret", "will-eth-hit-10k"]
+        self.assertEqual(
+            merge(target, source, limit=3),
+            ["will-fed-cut-rates", "will-btc-hit-100k", "will-eth-hit-10k"],
+        )
+
+
 class CommunityContractTests(unittest.TestCase):
     def test_community_payload_validates_slug_token_and_shape(self):
         community = import_optional("api.community")
