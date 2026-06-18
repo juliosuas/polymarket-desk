@@ -58,6 +58,7 @@ V2_OPTIONAL_ENDPOINTS = {
 
 COMMAND_DOCS = [
     ("All checks", "python3 scripts/check_repo.py"),
+    ("PR acceptance", "python3 scripts/pr_acceptance.py"),
     ("Contract tests only", "python3 -m unittest discover -s tests -p 'test_*.py' -v"),
     ("Python syntax only", "python3 -m py_compile api/*.py scripts/*.py tests/*.py"),
 ]

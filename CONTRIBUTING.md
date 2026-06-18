@@ -46,9 +46,17 @@ Run the repository check before opening a pull request:
 python3 scripts/check_repo.py
 ```
 
+For the full PR acceptance flow, including optional production smoke checks, see [docs/PR_REVIEW_PLAYBOOK.md](docs/PR_REVIEW_PLAYBOOK.md) and run:
+
+```bash
+python3 scripts/pr_acceptance.py
+```
+
 ## Pull Request Guidelines
 
 - Keep changes focused and explain the user-visible impact.
+- Run CodeRabbit on the PR or document the CodeRabbit/auth blocker before merge.
+- Resolve all critical and major review issues before accepting a PR.
 - Do not commit real `.env` files, Vercel project linkage, tokens, or generated caches.
 - Preserve the non-custodial product boundary: no wallet connection, custody, private-key handling, or server-side order execution without a separate design and risk discussion.
 - Add or update documentation when behavior, setup, or API output changes.
