@@ -12,6 +12,21 @@ This project aims to stay small, fast, readable, and useful for prediction-marke
 - Improve docs for deployment, Vercel KV, or data-source behavior.
 - Tighten privacy, security, accessibility, and mobile behavior.
 
+## Contributor Issue Roadmap
+
+When opening roadmap issues, keep each one narrow, user-facing, and labeled with `area:product`, `area:data`, `area:frontend`, `area:docs`, or `good first issue`.
+
+Good V2 starter issues:
+
+- `Daily brief MVP`: summarize top movers, top flow, consensus shifts, and watchlist changes in a shareable section.
+- `Market detail page`: add a focused market view with price, liquidity, event context, recent trades, and watchlist actions.
+- `Named watchlists`: let users name lists for themes such as elections, crypto, AI, sports, and macro.
+- `In-app alerts`: surface browser-visible alerts for watchlist moves, volume spikes, and consensus changes.
+- `Public desks`: document and support curated watchlist links for communities, newsletters, and research pages.
+- `Privacy-light analytics`: measure aggregate usage for screens, sessions, and referrals with clear disclosure and no wallet identity.
+
+Each issue should include the user problem, proposed behavior, non-goals, and a lightweight acceptance checklist.
+
 ## Local Setup
 
 ```bash

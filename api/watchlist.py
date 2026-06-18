@@ -1,11 +1,13 @@
 """Vercel serverless function: per-user Polymarket watchlist (Vercel KV).
 
-  GET    /api/watchlist?u=<uuid>            -> {slugs: [...]}
-  POST   /api/watchlist?u=<uuid>            body {slug:"..."}     -> add
-  DELETE /api/watchlist?u=<uuid>&slug=<s>                         -> remove
+  GET    /api/watchlist?u=<uuid>[&wl=<id>]            -> {slugs: [...]}
+  POST   /api/watchlist?u=<uuid>[&wl=<id>]            body {slug:"..."}     -> add
+  DELETE /api/watchlist?u=<uuid>[&wl=<id>]&slug=<s>                         -> remove
 
 Identity: opaque token sent by browser (UUID v4 stored in localStorage).
-KV key layout: `wl:<token>` -> JSON-encoded list of slugs.
+KV key layout:
+    `wl:<token>`      -> default legacy JSON-encoded list of slugs
+    `wl:<token>:<id>` -> named watchlist JSON-encoded list of slugs
 
 Required env (auto-injected when KV is connected to the project):
     KV_REST_API_URL
@@ -24,6 +26,7 @@ from http.server import BaseHTTPRequestHandler
 MAX_WATCHLIST = 50
 TOKEN_RE = re.compile(r"^[a-zA-Z0-9_-]{6,64}$")
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,200}$")
+WATCHLIST_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 
 
 def _kv_call(method: str, path: str, body: bytes | None = None):
@@ -84,6 +87,18 @@ def _validate_slug(slug: str | None) -> str:
     return slug
 
 
+def _validate_watchlist_id(wl_id: str | None) -> str | None:
+    if wl_id in (None, "", "default", "legacy"):
+        return None
+    if not WATCHLIST_ID_RE.match(wl_id):
+        raise ValueError("invalid watchlist id")
+    return wl_id
+
+
+def _watchlist_key(token: str, wl_id: str | None = None) -> str:
+    return f"wl:{token}" if not wl_id else f"wl:{token}:{wl_id}"
+
+
 # ---------- Vercel handler ----------
 class handler(BaseHTTPRequestHandler):
     def _send(self, obj, status=200):
@@ -109,8 +124,9 @@ class handler(BaseHTTPRequestHandler):
         try:
             params = self._params()
             token = _validate_token((params.get("u") or [None])[0])
-            slugs = kv_get_list(f"wl:{token}")
-            self._send({"slugs": slugs})
+            wl_id = _validate_watchlist_id((params.get("wl") or [None])[0])
+            slugs = kv_get_list(_watchlist_key(token, wl_id))
+            self._send({"slugs": slugs, "wl": wl_id or "default"})
         except ValueError as e:
             self._send({"error": str(e)}, 400)
         except Exception as e:
@@ -120,6 +136,7 @@ class handler(BaseHTTPRequestHandler):
         try:
             params = self._params()
             token = _validate_token((params.get("u") or [None])[0])
+            wl_id = _validate_watchlist_id((params.get("wl") or [None])[0])
             length = int(self.headers.get("Content-Length") or 0)
             raw = self.rfile.read(length) if length else b"{}"
             try:
@@ -128,14 +145,14 @@ class handler(BaseHTTPRequestHandler):
                 self._send({"error": "invalid JSON body"}, 400)
                 return
             slug = _validate_slug((data or {}).get("slug"))
-            existing = kv_get_list(f"wl:{token}")
+            existing = kv_get_list(_watchlist_key(token, wl_id))
             if slug not in existing:
                 if len(existing) >= MAX_WATCHLIST:
                     self._send({"error": f"watchlist full ({MAX_WATCHLIST} max)"}, 400)
                     return
                 existing.append(slug)
-                kv_set_list(f"wl:{token}", existing)
-            self._send({"slugs": existing})
+                kv_set_list(_watchlist_key(token, wl_id), existing)
+            self._send({"slugs": existing, "wl": wl_id or "default"})
         except ValueError as e:
             self._send({"error": str(e)}, 400)
         except Exception as e:
@@ -145,12 +162,13 @@ class handler(BaseHTTPRequestHandler):
         try:
             params = self._params()
             token = _validate_token((params.get("u") or [None])[0])
+            wl_id = _validate_watchlist_id((params.get("wl") or [None])[0])
             slug = _validate_slug((params.get("slug") or [None])[0])
-            existing = kv_get_list(f"wl:{token}")
+            existing = kv_get_list(_watchlist_key(token, wl_id))
             new = [s for s in existing if s != slug]
             if new != existing:
-                kv_set_list(f"wl:{token}", new)
-            self._send({"slugs": new})
+                kv_set_list(_watchlist_key(token, wl_id), new)
+            self._send({"slugs": new, "wl": wl_id or "default"})
         except ValueError as e:
             self._send({"error": str(e)}, 400)
         except Exception as e:

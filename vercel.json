@@ -8,13 +8,18 @@
       "source": "/api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, PATCH, DELETE, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type" }
       ]
     }
   ],
   "functions": {
+    "api/desk.py": { "maxDuration": 15 },
+    "api/alerts.py": { "maxDuration": 10 },
+    "api/analytics.py": { "maxDuration": 10 },
+    "api/market.py": { "maxDuration": 15 },
     "api/state.py": { "maxDuration": 15 },
-    "api/watchlist.py": { "maxDuration": 10 }
+    "api/watchlist.py": { "maxDuration": 10 },
+    "api/watchlists.py": { "maxDuration": 10 }
   }
 }

@@ -22,6 +22,15 @@ import urllib.request
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler
 
+try:
+    from api.alerts import evaluate_alerts_for_snapshot
+except Exception:  # pragma: no cover - keep state resilient if alerts are unavailable.
+    try:
+        from alerts import evaluate_alerts_for_snapshot  # type: ignore
+    except Exception:  # pragma: no cover
+        def evaluate_alerts_for_snapshot(user_token: str, markets: list[dict]) -> list[dict]:
+            return []
+
 # ---------- Config ----------
 GAMMA_MARKETS = "https://gamma-api.polymarket.com/markets"
 GAMMA_EVENTS = "https://gamma-api.polymarket.com/events"
@@ -68,6 +77,10 @@ TODAY_RESOLVED_BAND = 0.005   # exclude markets at <=0.5% or >=99.5% (essentiall
 TODAY_TOP_N = 6
 
 TOP_N = 8
+COCKPIT_TRACK_LIMIT = 40
+COCKPIT_MOVE_MIN = 0.01
+USER_TOKEN_RE = re.compile(r"^[a-zA-Z0-9_-]{6,64}$")
+WATCHLIST_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 
 EXCLUDE_PATTERNS = [
     re.compile(r"\bvs\.?\s+\w+", re.IGNORECASE),
@@ -93,6 +106,28 @@ def _safe_float(value, default: float = 0.0) -> float:
         return number if math.isfinite(number) else default
     except (TypeError, ValueError):
         return default
+
+
+def _is_primary_market(row: dict) -> bool:
+    """Primary screens should only show unresolved/open market rows."""
+    if not row or not row.get("slug"):
+        return False
+    days = row.get("days")
+    if not isinstance(days, int):
+        return False
+    return days >= 0
+
+
+def _watchlist_id(value: str | None) -> str | None:
+    if value in (None, "", "default", "legacy"):
+        return None
+    if not WATCHLIST_ID_RE.match(value):
+        return None
+    return value
+
+
+def _watchlist_key(user_token: str, wl_id: str | None = None) -> str:
+    return f"wl:{user_token}" if not wl_id else f"wl:{user_token}:{wl_id}"
 
 
 # ---------- Polymarket fetchers ----------
@@ -250,15 +285,140 @@ def _kv_get(key: str):
         return None
 
 
-def fetch_watchlist(user_token: str) -> list[dict]:
-    if not user_token or not re.match(r"^[a-zA-Z0-9_-]{6,64}$", user_token):
+def _kv_set(key: str, value) -> bool:
+    base = os.environ.get("KV_REST_API_URL")
+    token = os.environ.get("KV_REST_API_TOKEN")
+    if not base or not token:
+        return False
+    payload = json.dumps(value, separators=(",", ":")).encode("utf-8")
+    req = urllib.request.Request(
+        f"{base}/set/{urllib.parse.quote(key)}",
+        data=payload,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+            "User-Agent": "polydash/2.0",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=6):
+            return True
+    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError):
+        return False
+
+
+def fetch_watchlist(user_token: str, wl_id: str | None = None) -> list[dict]:
+    if not user_token or not USER_TOKEN_RE.match(user_token):
         return []
-    slugs = _kv_get(f"wl:{user_token}") or []
+    slugs = _kv_get(_watchlist_key(user_token, _watchlist_id(wl_id))) or []
     if not isinstance(slugs, list):
         return []
     with cf.ThreadPoolExecutor(max_workers=min(8, max(1, len(slugs)))) as ex:
         results = list(ex.map(fetch_market, slugs))
     return [r for r in results if r is not None]
+
+
+def _unique_markets(markets: list[dict]) -> list[dict]:
+    by_slug = {}
+    for market in markets:
+        if not isinstance(market, dict) or not market.get("slug"):
+            continue
+        if not _is_primary_market(market):
+            continue
+        slug = market["slug"]
+        if slug not in by_slug:
+            by_slug[slug] = market
+    return list(by_slug.values())
+
+
+def _snapshot_market(market: dict) -> dict:
+    return {
+        "slug": market.get("slug"),
+        "question": market.get("question"),
+        "yes": round(_safe_float(market.get("yes")), 6),
+        "no": round(_safe_float(market.get("no")), 6),
+        "vol24h": round(_safe_float(market.get("vol24h")), 2),
+        "one_day_change": round(_safe_float(market.get("one_day_change")), 6),
+        "days": market.get("days"),
+        "end_date": market.get("end_date"),
+    }
+
+
+def _short_market(market: dict) -> dict:
+    return {
+        "slug": market.get("slug"),
+        "question": market.get("question"),
+        "yes": market.get("yes"),
+        "days": market.get("days"),
+        "vol24h": market.get("vol24h"),
+        "one_day_change": market.get("one_day_change"),
+    }
+
+
+def build_cockpit(user_token: str, rows: list[dict], watchlist: list[dict] | None) -> dict:
+    open_watchlist = _unique_markets(watchlist or [])
+    tracked = open_watchlist or rows[:COCKPIT_TRACK_LIMIT]
+    tracked = _unique_markets(tracked)[:COCKPIT_TRACK_LIMIT]
+    current = {m["slug"]: _snapshot_market(m) for m in tracked if m.get("slug")}
+    valid_user = bool(user_token and USER_TOKEN_RE.match(user_token))
+    previous = _kv_get(f"cockpit:{user_token}") if valid_user else {}
+    previous = previous or {}
+    prev_markets = previous.get("markets") if isinstance(previous, dict) else {}
+    if not isinstance(prev_markets, dict):
+        prev_markets = {}
+
+    price_moves = []
+    if prev_markets:
+        for slug, snapshot in current.items():
+            prev = prev_markets.get(slug)
+            if not isinstance(prev, dict):
+                continue
+            delta = snapshot["yes"] - _safe_float(prev.get("yes"))
+            if abs(delta) < COCKPIT_MOVE_MIN:
+                continue
+            price_moves.append({
+                **snapshot,
+                "previous_yes": _safe_float(prev.get("yes")),
+                "delta_yes": round(delta, 6),
+            })
+    price_moves.sort(key=lambda m: -abs(m["delta_yes"]))
+
+    new_slugs = []
+    removed_slugs = []
+    if prev_markets:
+        new_slugs = [slug for slug in current.keys() if slug not in prev_markets][:10]
+        removed_slugs = [slug for slug in prev_markets.keys() if slug not in current][:10]
+
+    movers_source = open_watchlist or rows
+    movers = sorted(
+        [_short_market(m) for m in movers_source if _is_primary_market(m)],
+        key=lambda m: -abs(_safe_float(m.get("one_day_change"))),
+    )[:6]
+    expiring = sorted(
+        [_short_market(m) for m in open_watchlist if isinstance(m.get("days"), int) and 0 <= m["days"] <= 2],
+        key=lambda m: (m["days"], -_safe_float(m.get("vol24h"))),
+    )[:6]
+
+    cockpit = {
+        "open": {
+            "tracked_markets": len(tracked),
+            "watchlist_markets": len(open_watchlist),
+            "expiring_soon": expiring,
+            "movers": movers,
+            "top_flow": [_short_market(m) for m in rows[:6]],
+        },
+        "since_last": {
+            "previous_ts": previous.get("ts") if isinstance(previous, dict) else None,
+            "tracked_markets": len(current),
+            "price_moves": price_moves[:10],
+            "new": new_slugs,
+            "removed": removed_slugs,
+        },
+    }
+    if valid_user:
+        _kv_set(f"cockpit:{user_token}", {"ts": datetime.now(timezone.utc).isoformat(), "markets": current})
+    return cockpit
 
 
 # ---------- Screens ----------
@@ -394,12 +554,12 @@ def screen_value_plays(rows):
 
 
 # ---------- Aggregator ----------
-def collect(user_token: str | None = None):
+def collect(user_token: str | None = None, wl_id: str | None = None):
     with cf.ThreadPoolExecutor(max_workers=8) as ex:
         f_screen = ex.submit(fetch_screen)
         f_events = ex.submit(fetch_events)
         f_trades = ex.submit(fetch_trades)
-        f_wl = ex.submit(fetch_watchlist, user_token) if user_token else None
+        f_wl = ex.submit(fetch_watchlist, user_token, wl_id) if user_token else None
 
         rows = f_screen.result() or []
         events = f_events.result() or []
@@ -411,20 +571,24 @@ def collect(user_token: str | None = None):
             except Exception:
                 watchlist = []
 
+    primary_rows = [r for r in rows if _is_primary_market(r)]
     payload = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        "safest": screen_safest(rows),
-        "today_movers": screen_today(rows),
-        "trending_markets": rows[:TRENDING_LIMIT],
-        "high_conv": screen_high_conv(rows),
-        "top_movers": screen_top_movers(rows),
-        "top_flow": screen_top_flow(rows),
-        "value_plays": screen_value_plays(rows),
+        "safest": screen_safest(primary_rows),
+        "today_movers": screen_today(primary_rows),
+        "trending_markets": primary_rows[:TRENDING_LIMIT],
+        "high_conv": screen_high_conv(primary_rows),
+        "top_movers": screen_top_movers(primary_rows),
+        "top_flow": screen_top_flow(primary_rows),
+        "value_plays": screen_value_plays(primary_rows),
         "events": events,
         "trades": trades,
     }
     if watchlist is not None:
         payload["watchlist"] = watchlist
+        alert_context = _unique_markets(primary_rows + watchlist)
+        payload["cockpit"] = build_cockpit(user_token or "", primary_rows, watchlist)
+        payload["alert_events"] = evaluate_alerts_for_snapshot(user_token or "", alert_context)
     return payload
 
 
@@ -443,7 +607,8 @@ class handler(BaseHTTPRequestHandler):
             qs = urllib.parse.urlparse(self.path).query
             params = urllib.parse.parse_qs(qs)
             user_token = (params.get("u") or [None])[0]
-            data = collect(user_token=user_token)
+            wl_id = _watchlist_id((params.get("wl") or [None])[0])
+            data = collect(user_token=user_token, wl_id=wl_id)
             body = json.dumps(data, default=str).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
