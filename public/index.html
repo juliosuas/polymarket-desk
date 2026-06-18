@@ -365,7 +365,11 @@
     letter-spacing:.12em; text-transform:uppercase; }
   .trade-fields input { width:100%; margin-top:4px; background:var(--panel2); border:1px solid var(--line);
     color:var(--fg); border-radius:4px; padding:7px; font-size:11px; }
-  .trade-preview { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:9px 0; }
+  .amount-presets { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:8px 0; }
+  .amount-presets button { border:1px solid var(--line); background:var(--panel2); color:var(--fg);
+    border-radius:4px; padding:7px 4px; cursor:pointer; font-size:10.5px; font-variant-numeric:tabular-nums; }
+  .amount-presets button.active { border-color:var(--amber); color:var(--amber); }
+  .trade-preview { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; margin:9px 0; }
   .trade-preview div { border:1px solid var(--line); border-radius:4px; padding:7px; }
   .trade-preview .k { color:var(--mut); font-size:9px; letter-spacing:.12em; text-transform:uppercase; }
   .trade-preview .v { color:var(--fg); font-size:12px; font-weight:700; }
@@ -1986,8 +1990,35 @@ const marketDrawer = document.getElementById('market-drawer');
 const marketBackdrop = document.getElementById('market-backdrop');
 const marketDrawerBody = document.getElementById('market-drawer-body');
 const drawerRoute = document.getElementById('drawer-route');
+const TRADE_BUDGET_PRESETS = [5, 25, 100, 500];
 let tradeSide = 'YES';
-let tradeSize = 10;
+let tradeBudget = loadTradeBudget();
+
+function normalizeTradeBudget(value) {
+  const parsed = Number(String(value || '').replace(',', '.'));
+  return Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 100000) : 10;
+}
+
+function loadTradeBudget() {
+  try {
+    return normalizeTradeBudget(localStorage.getItem('pm_trade_budget') || 10);
+  } catch(e) {
+    return 10;
+  }
+}
+
+function setTradeBudget(value) {
+  tradeBudget = normalizeTradeBudget(value);
+  try {
+    localStorage.setItem('pm_trade_budget', String(tradeBudget));
+  } catch(e) {}
+  return tradeBudget;
+}
+
+function tradeSharesForBudget(budget, price) {
+  if (!Number.isFinite(price) || price <= 0) return 0;
+  return Math.floor((budget / price) * 100) / 100;
+}
 
 function outcomeTokenId(m, side) {
   const outcomes = Array.isArray(m.outcomes) ? m.outcomes : [];
@@ -1999,14 +2030,17 @@ function outcomeTokenId(m, side) {
 }
 
 function tradePriceForSide(m, side) {
+  let value = Number(m.yes || m.last_trade || 0);
   if (side === 'NO') {
-    if (Number(m.no)) return Number(m.no);
-    if (Number(m.yes)) return Math.max(0, Math.min(1, 1 - Number(m.yes)));
+    if (Number(m.no)) value = Number(m.no);
+    else if (Number(m.yes)) value = 1 - Number(m.yes);
   }
-  return Number(m.yes || m.last_trade || 0);
+  return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 0;
 }
 
-function tradePayload(m, side, size, price) {
+function tradePayload(m, side, budget, price) {
+  const size = tradeSharesForBudget(budget, price);
+  const cost = Math.max(0, size * price);
   return {
     intent_only: true,
     venue: 'polymarket',
@@ -2016,8 +2050,9 @@ function tradePayload(m, side, size, price) {
     outcome: side,
     token_id: outcomeTokenId(m, side),
     limit_price: Number(price.toFixed(4)),
+    max_spend: Number(budget.toFixed(2)),
     size: Number(size.toFixed(2)),
-    estimated_cost: Number((size * price).toFixed(2)),
+    estimated_cost: Number(cost.toFixed(2)),
     signer_required: true,
     auth: 'User signs on Polymarket/CLOB. Polymarket Desk does not store private keys or L2 credentials.',
   };
@@ -2026,10 +2061,14 @@ function tradePayload(m, side, size, price) {
 function renderTradeTicket(m) {
   const side = tradeSide === 'NO' ? 'NO' : 'YES';
   const price = tradePriceForSide(m, side);
-  const size = Number(tradeSize || 0);
+  const budget = normalizeTradeBudget(tradeBudget || 10);
+  const size = tradeSharesForBudget(budget, price);
   const cost = Math.max(0, size * price);
   const maxPayout = Math.max(0, size - cost);
   const tokenId = outcomeTokenId(m, side);
+  const presetHtml = TRADE_BUDGET_PRESETS.map(amount =>
+    `<button type="button" data-trade-budget-preset="${amount}" class="${Math.abs(budget - amount) < 0.01 ? 'active' : ''}">$${amount}</button>`
+  ).join('');
   return `<div class="trade-ticket" data-trade-ticket="${escapeHtml(m.slug || '')}">
     <h3>FAST BET TICKET</h3>
     <div class="side-toggle">
@@ -2038,24 +2077,26 @@ function renderTradeTicket(m) {
     </div>
     <div class="trade-fields">
       <label>
-        Shares
-        <input data-trade-size="${escapeHtml(m.slug || '')}" inputmode="decimal" value="${escapeHtml(size || 10)}">
+        Max spend
+        <input data-trade-budget="${escapeHtml(m.slug || '')}" inputmode="decimal" value="${escapeHtml(budget)}">
       </label>
       <label>
         Indicative price
         <input readonly value="${escapeHtml((price * 100).toFixed(1) + '¢')}">
       </label>
     </div>
+    <div class="amount-presets">${presetHtml}</div>
     <div class="trade-preview">
       <div><div class="k">Cost</div><div class="v">${fmt.vol(cost)}</div></div>
+      <div><div class="k">Shares</div><div class="v">${fmt.count(size)}</div></div>
       <div><div class="k">Max profit</div><div class="v">${fmt.vol(maxPayout)}</div></div>
       <div><div class="k">Token</div><div class="v">${tokenId ? 'READY' : 'OPEN'}</div></div>
     </div>
     <div class="control-row compact">
-      <a class="tool-button" href="${escapeHtml('https://polymarket.com/market/' + encodeURIComponent(m.slug || ''))}" target="_blank" rel="noopener noreferrer" data-polymarket-trade="${escapeHtml(m.slug || '')}">TRADE ON POLYMARKET</a>
-      <button class="tool-button" type="button" data-copy-trade="${escapeHtml(m.slug || '')}">COPY CLOB INTENT</button>
+      <a class="tool-button" href="${escapeHtml('https://polymarket.com/market/' + encodeURIComponent(m.slug || ''))}" target="_blank" rel="noopener noreferrer" data-polymarket-trade="${escapeHtml(m.slug || '')}">OPEN POLYMARKET TO SIGN</a>
+      <button class="tool-button" type="button" data-copy-trade="${escapeHtml(m.slug || '')}">COPY ORDER PLAN</button>
     </div>
-    <div class="drawer-note">Execution requires the user's Polymarket wallet/signature. This desk prepares intent only; it never stores private keys, API secrets, or places orders.</div>
+    <div class="drawer-note">You sign on Polymarket. This desk never stores private keys, API secrets, or submits orders for you.</div>
   </div>`;
 }
 
@@ -2272,13 +2313,20 @@ document.addEventListener('click', event => {
     track('trade_ticket_side', {side: tradeSide});
     return;
   }
+  const budgetPreset = event.target.closest('[data-trade-budget-preset]');
+  if (budgetPreset) {
+    setTradeBudget(budgetPreset.dataset.tradeBudgetPreset);
+    if (marketCache.has(currentMarketSlug)) renderMarketDrawer(marketCache.get(currentMarketSlug));
+    track('trade_budget_preset', {amount: tradeBudget});
+    return;
+  }
   const copyTrade = event.target.closest('[data-copy-trade]');
   if (copyTrade) {
     const slug = cleanSlug(copyTrade.dataset.copyTrade);
     const market = marketCache.get(slug) || marketCache.get(currentMarketSlug);
     if (market) {
       const price = tradePriceForSide(market, tradeSide);
-      const payload = tradePayload(market, tradeSide, Number(tradeSize || 10), price);
+      const payload = tradePayload(market, tradeSide, Number(tradeBudget || 10), price);
       copyText(JSON.stringify(payload, null, 2), copyTrade, 'COPIED');
       track('trade_intent_copy', {slug, side: tradeSide});
     }
@@ -2300,11 +2348,10 @@ document.addEventListener('click', event => {
 });
 
 document.addEventListener('change', event => {
-  const sizeInput = event.target.closest('[data-trade-size]');
-  if (!sizeInput) return;
-  const parsed = Number(String(sizeInput.value || '').replace(',', '.'));
-  tradeSize = Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 100000) : 10;
-  const market = marketCache.get(sizeInput.dataset.tradeSize || currentMarketSlug);
+  const budgetInput = event.target.closest('[data-trade-budget]');
+  if (!budgetInput) return;
+  setTradeBudget(budgetInput.value);
+  const market = marketCache.get(budgetInput.dataset.tradeBudget || currentMarketSlug);
   if (market) renderMarketDrawer(market);
 });
 
