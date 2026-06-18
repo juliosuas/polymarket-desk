@@ -4,7 +4,7 @@
 
 **An open-source Polymarket terminal and market intelligence desk.**
 
-Track Polymarket flow, spot sharp 24h moves, surface extreme consensus bets, follow the live tape, manage watchlists and alerts, open public desks, and prepare safe order plans from one fast market cockpit.
+Track Polymarket flow, spot sharp 24h moves, surface extreme consensus probabilities, follow the live tape, manage watchlists and alerts, open public desks, and prepare order-intent plans from one fast probability cockpit.
 
 [![Live Demo](https://img.shields.io/badge/live-vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://polymarket-desk-seven.vercel.app)
 [![GitHub](https://img.shields.io/badge/github-polymarket--desk-181717?style=for-the-badge&logo=github)](https://github.com/juliosuas/polymarket-desk)
@@ -26,14 +26,14 @@ Track Polymarket flow, spot sharp 24h moves, surface extreme consensus bets, fol
 | 24h market movers | See where pricing changed before the story gets old |
 | Top flow | Follow where attention and liquidity are concentrating |
 | Consensus screens | Find markets priced near certainty but still unresolved |
-| Value plays | Surface extreme-price candidates worth deeper research |
+| Probability edges | Surface extreme-price candidates worth deeper research |
 | Live tape | Watch public trades print in real time |
 | Shareable watchlists | Track and share a market set without accounts or wallets |
 | Market detail | Inspect price, spread, liquidity, close time, recent trades, related markets, alerts, and watch actions |
-| Fast trade launcher | Pick YES/NO, choose max spend, copy an order plan, and open Polymarket to sign |
+| Probability ticket | Pick YES/NO, choose max spend, copy an order-intent plan, and open Polymarket to sign |
 | V2 market desk | Since-last-open brief, named watchlists, in-app alerts, public desks, and privacy-light analytics |
 
-Polymarket Desk is intentionally **non-custodial and intent-only**. It does not submit orders, connect wallets, custody funds, or require private Polymarket credentials. The trade launcher prepares an order plan and sends users to Polymarket to sign.
+Polymarket Desk is intentionally **non-custodial and intent-only**. It does not submit orders, connect wallets, custody funds, or require private Polymarket credentials. The probability ticket prepares an order-intent plan and sends users to Polymarket to sign.
 
 ## Why It Exists
 
@@ -64,7 +64,7 @@ Polymarket Desk compresses those answers into one screen.
 | Audience | Why they care |
 | --- | --- |
 | Prediction-market traders | Faster market scanning, watchlists, live tape, and catalyst detection |
-| Reddit / Discord bettors | A clean way to find spicy markets and big moves without scrolling forever |
+| Reddit / Discord communities | A clean way to find probability moves, market heat, and shareable context without scrolling forever |
 | Developers | A small, hackable Polymarket data app with serverless APIs and no framework overhead |
 | Newsletter writers | A source for daily "top movers", "market heat", and "consensus watch" sections |
 | Investors / YC-style reviewers | A wedge into the prediction-market tooling layer: dashboards, alerts, analytics, and trade infrastructure |
@@ -80,7 +80,7 @@ The project is especially looking for contributors who want to:
 - Build public desks for crypto, macro, sports, AI, geopolitics, and elections.
 - Improve mobile, accessibility, empty states, and copy.
 - Add historical snapshots, charts, fixtures, and API contract tests.
-- Keep the trade launcher safe: no server-side private keys, no custody, no hidden execution.
+- Keep the probability ticket safe: no server-side private keys, no custody, no hidden execution.
 
 Start with issues labeled [`good first issue`](https://github.com/juliosuas/polymarket-desk/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or [`help wanted`](https://github.com/juliosuas/polymarket-desk/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22). Small PRs are welcome; one sharp improvement beats a giant rewrite.
 
@@ -119,7 +119,7 @@ https://polymarket-desk-seven.vercel.app
 | Market Dashboard | Consensus markets, 24h catalysts, watchlist, and summary stats |
 | Since Last Open | A daily brief-style block with recent movers, flow, closers, and tape activity |
 | Trending | Top events, top movers, and highest-flow markets |
-| Value Plays | Heuristic screen for extreme prices with meaningful recent volume |
+| Probability Edges | Heuristic screen for extreme prices with meaningful recent volume |
 | Screens | High-conviction and top-flow filters for fast scanning |
 | Live Tape | Recent public trades across Polymarket |
 | Market Detail | Focused drawer with Polymarket link, bid/ask, spread, liquidity, recent trades, related markets, watchlist, alert, and order-plan actions |
@@ -135,7 +135,7 @@ V2 grows Polymarket Desk from a fast market scanner into a lightweight market in
 | --- | --- | --- |
 | Since Last Open Brief | Shipped | A quick read on watchlist movers, high-flow markets, closing-soon markets, and tape prints |
 | Market Detail | Shipped | One focused view per market with price, liquidity, event context, recent trades, and watchlist actions |
-| Fast Trade Launcher | Shipped | Build a local order plan and open Polymarket for user-side signing |
+| Probability Ticket | Shipped | Build a local order-intent plan and open Polymarket for user-side signing |
 | Named Watchlists | Shipped | Human-readable lists for themes like elections, crypto, AI, sports, macro, or a community's favorite markets |
 | In-App Alerts | Shipped | Browser-visible alerts for watchlist moves, volume spikes, consensus changes, and notable tape activity |
 | Public Desks | Shipped | Curated public watchlists that can be linked from posts, newsletters, Discords, and research pages |
@@ -149,7 +149,7 @@ These features should preserve the current boundary: Polymarket Desk can prepare
 - **Built for scanning, not browsing**: dense layout, tabbed screens, fast polling, and tape-first market context.
 - **No wallet required**: useful to lurkers, researchers, traders, and builders before any transaction.
 - **Shareable watchlists**: a simple URL can carry a market list across devices or groups.
-- **Fast safe order plans**: choose side and max spend, then open Polymarket to sign without sharing keys with this app.
+- **Fast probability tickets**: choose side and max spend, then open Polymarket to sign without sharing keys with this app.
 - **Hackable architecture**: no heavy frontend framework, simple Python APIs, easy to fork.
 - **Clear expansion path**: daily briefs, market detail, named watchlists, alerts, analytics, public desks, and historical data.
 
@@ -166,7 +166,7 @@ These features should preserve the current boundary: Polymarket Desk can prepare
 ## Highlights
 
 - **Fast market triage**: scan top markets, events, movers, and trade flow from one page.
-- **Value discovery**: rank markets with extreme implied probabilities and real liquidity.
+- **Probability discovery**: rank markets with extreme implied probabilities and real liquidity.
 - **Zero-login watchlists**: browser-generated token, backed by KV, shareable by URL.
 - **Serverless data layer**: Python functions aggregate public Polymarket APIs.
 - **No build pipeline**: vanilla HTML/CSS/JS frontend, deployable directly on Vercel.
@@ -177,9 +177,9 @@ These features should preserve the current boundary: Polymarket Desk can prepare
 ### For prediction-market traders
 
 - Open it before trading to see where attention and liquidity are moving.
-- Use `Value Plays` to find extreme consensus markets worth researching.
+- Use `Probability Edges` to find extreme consensus markets worth researching.
 - Track a personalized watchlist across devices with a share link.
-- Use the trade launcher to turn a market view into a clear order plan before signing on Polymarket.
+- Use the probability ticket to turn a market view into a clear order-intent plan before signing on Polymarket.
 - Watch the live tape to understand what is actively printing.
 
 ### For Reddit and Discord communities
@@ -298,7 +298,7 @@ Representative fields:
 
 ### `GET /api/market?slug=<slug>&history=1`
 
-Returns one market detail payload with normalized market fields, recent trades, related markets, and optional history. The frontend uses this for the market drawer and trade launcher.
+Returns one market detail payload with normalized market fields, recent trades, related markets, and optional history. The frontend uses this for the market drawer and probability ticket.
 
 ### `GET /api/watchlists?u=<token>`
 
@@ -372,7 +372,7 @@ That token is sent as `?u=<token>` to the API. The share action copies a URL con
 
 Treat watchlist links as bearer-style edit links. Anyone with the token can view and modify that watchlist.
 
-## Value Plays Scoring
+## Probability Edges Scoring
 
 The value screen ranks markets with extreme implied prices, meaningful volume, and a medium-term horizon.
 
@@ -453,7 +453,7 @@ python3 scripts/check_repo.py
 The frontend is a single HTML file with embedded CSS and JavaScript. The API layer is a small set of Vercel Python functions:
 
 - `api/state.py` aggregates market, event, trade, screen, watchlist, cockpit, and alert-event data.
-- `api/market.py` powers the market detail drawer and trade launcher data.
+- `api/market.py` powers the market detail drawer and probability-ticket data.
 - `api/watchlist.py` preserves the legacy default watchlist contract.
 - `api/watchlists.py` stores named watchlists and share/import/export flows.
 - `api/alerts.py` stores and evaluates alert rules.
@@ -534,7 +534,7 @@ Use [docs/LAUNCH.md](docs/LAUNCH.md) before public posts, demo days, or communit
 ## Security And Privacy
 
 - No server-side trading execution or wallet connection is implemented.
-- The trade launcher creates an intent-only order plan and opens Polymarket for user-side signing.
+- The probability ticket creates an intent-only order plan and opens Polymarket for user-side signing.
 - No Polymarket API keys are required.
 - Watchlist state is keyed by opaque browser tokens.
 - Watchlist share links are bearer-style edit links.

@@ -2,7 +2,7 @@
 
 Use this when preparing Polymarket Desk for a public push, demo day, community post, or open-source launch.
 
-Position it as an open-source Polymarket terminal and market intelligence desk: useful today as a non-custodial trader cockpit with market scanning, detail views, named watchlists, in-app alerts, public desks, privacy-light analytics, and safe order plans that users sign on Polymarket.
+Position it as an open-source Polymarket terminal and probability intelligence desk: useful today as a non-custodial cockpit with market scanning, detail views, named watchlists, in-app alerts, public desks, privacy-light analytics, and order-intent plans that users sign on Polymarket.
 
 ## Repository
 
@@ -35,7 +35,7 @@ Position it as an open-source Polymarket terminal and market intelligence desk: 
 
 ## Short Pitch
 
-Polymarket Desk is an open-source Polymarket terminal: top markets, 24h movers, consensus screens, live tape, watchlists, alerts, public desks, and safe order plans in one fast non-custodial desk.
+Polymarket Desk is an open-source Polymarket terminal: top markets, 24h movers, consensus screens, live money flow, watchlists, alerts, public desks, and order-intent plans in one fast non-custodial probability desk.
 
 ## Longer Pitch
 
@@ -46,9 +46,9 @@ Prediction markets are becoming a real-time layer for news, politics, sports, cr
 ### X
 
 ```text
-I built Polymarket Desk: an open-source, non-custodial Polymarket terminal for scanning top markets, 24h movers, consensus bets, live tape, watchlists, alerts, public desks, and safe order plans.
+I built Polymarket Desk: an open-source, non-custodial Polymarket terminal for scanning top markets, 24h movers, consensus probabilities, live money flow, watchlists, alerts, public desks, and order-intent plans.
 
-Now live: market detail, named watchlists, in-app alerts, public desks, privacy-light analytics, and a trade launcher that opens Polymarket for user-side signing.
+Now live: market detail, named watchlists, in-app alerts, public desks, privacy-light analytics, and a probability ticket that opens Polymarket for user-side signing.
 
 Demo: https://polymarket-desk-seven.vercel.app
 Repo: https://github.com/juliosuas/polymarket-desk
@@ -57,7 +57,7 @@ Repo: https://github.com/juliosuas/polymarket-desk
 ### Reddit
 
 ```text
-I built an open-source Polymarket desk for market scanning: top flow, 24h movers, consensus screens, live tape, shareable watchlists, alerts, public desks, and safe order plans. It is non-custodial: no wallet connection, no server-side order execution, no private Polymarket credentials.
+I built an open-source Polymarket desk for market scanning: top flow, 24h movers, consensus screens, live money flow, shareable watchlists, alerts, public desks, and order-intent plans. It is non-custodial: no wallet connection, no server-side order execution, no private Polymarket credentials.
 
 I am especially looking for feedback on which screens are useful, which alerts would matter, and what a daily prediction-market brief should include.
 
@@ -70,7 +70,7 @@ Repo: https://github.com/juliosuas/polymarket-desk
 ```text
 Show HN: Polymarket Desk - an open-source terminal for prediction-market intelligence
 
-Polymarket Desk is a non-custodial Vercel app that aggregates public Polymarket data into a fast market cockpit: top markets, 24h movers, consensus screens, live tape, shareable watchlists, alerts, public desks, and safe order plans.
+Polymarket Desk is a non-custodial Vercel app that aggregates public Polymarket data into a fast probability cockpit: top markets, 24h movers, consensus screens, live money flow, shareable watchlists, alerts, public desks, and order-intent plans.
 
 The repo is intentionally small: vanilla HTML/CSS/JS, Python serverless functions, Vercel KV for watchlists and alerts, no wallet connection, and no private Polymarket credentials. The open roadmap focuses on daily brief export, historical snapshots, richer alerts, community public desks, and contributor-friendly tests.
 ```
@@ -85,7 +85,7 @@ Useful bits:
 - consensus and high-flow screens
 - live public trade tape
 - shareable watchlists for themes or groups
-- alerts, public desks, and safe order plans
+- alerts, public desks, and order-intent plans
 
 Open-source contributors wanted: public desk curation, alert delivery, mobile polish, tests, historical charts, and daily brief export.
 

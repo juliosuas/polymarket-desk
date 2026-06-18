@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>POLYMARKET DESK</title>
-<meta name="description" content="A non-custodial desk for scanning Polymarket markets, 24h movers, live trade flow, alerts, public desks, and safe order plans.">
+<meta name="description" content="A non-custodial probability desk for scanning Polymarket markets, 24h movers, live money flow, alerts, public desks, and order-intent plans.">
 <meta name="theme-color" content="#07090c">
 <link rel="canonical" href="https://polymarket-desk-seven.vercel.app/">
 <meta property="og:title" content="Polymarket Desk">
-<meta property="og:description" content="Prediction-market dashboard with top markets, catalysts, consensus screens, live tape, and watchlists.">
+<meta property="og:description" content="Probability-market dashboard with top markets, catalysts, consensus screens, live money flow, and watchlists.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://polymarket-desk-seven.vercel.app/">
 <meta name="twitter:card" content="summary">
@@ -53,15 +53,22 @@
     padding: 12px 22px; border-bottom: 1px solid var(--line);
     background: rgba(7,9,12,.94); backdrop-filter: blur(14px);
     position: sticky; top: 0; z-index: 100; }
-  header .brand { display:flex; align-items:center; gap: 12px; flex-wrap:wrap; }
-  .brand-mark { width: 28px; height: 28px; border-radius: 7px;
-    background: linear-gradient(145deg, rgba(245,165,36,.96), rgba(34,197,94,.82));
-    display:grid; place-items:center; box-shadow: 0 10px 28px rgba(245,165,36,.18); }
-  .brand-mark::before { content:""; width: 12px; height: 12px;
-    border: 2px solid #fff; transform: rotate(45deg); border-left-color: transparent;
-    border-bottom-color: transparent; }
+  header .brand { display:flex; align-items:center; gap: 12px; flex-wrap:wrap; min-width: 0; }
+  .brand-copy { display:grid; gap: 1px; min-width: 0; flex: 0 1 auto; }
+  .brand-mark { position: relative; width: 30px; height: 30px; border-radius: 50%;
+    background:
+      radial-gradient(circle at 35% 30%, rgba(255,255,255,.58), transparent 28%),
+      linear-gradient(145deg, #ffd166 0%, var(--amber) 52%, #9a5f05 100%);
+    display:grid; place-items:center; box-shadow: 0 10px 28px rgba(245,165,36,.26);
+    border: 1px solid rgba(255,209,102,.72); color: #07090c; font-weight: 900; }
+  .brand-mark::before { content:"%"; font-size: 16px; line-height: 1; letter-spacing: 0;
+    transform: translateY(-.5px); }
+  .brand-mark::after { content:""; position:absolute; inset: 5px; border-radius: 50%;
+    border: 1px solid rgba(7,9,12,.26); pointer-events:none; }
   header h1 { margin:0; font-size: 14px; font-weight:700; letter-spacing: .08em;
     color: var(--amber); }
+  .brand-tagline { color: var(--mut); font-size: 9.5px; letter-spacing: .13em;
+    text-transform: uppercase; white-space: nowrap; }
   header .live { font-size: 10px; letter-spacing: .15em; color: var(--mut); }
   header .live .dot { display:inline-block; width:8px; height:8px;
     border-radius:50%; background: var(--mut); margin-right: 4px;
@@ -86,7 +93,10 @@
   main { padding: 16px 22px; min-width: 0; }
   @media (max-width: 640px) {
     header { padding: 10px 14px; align-items:flex-start; }
-    header .brand { gap: 8px 12px; }
+    header .brand { gap: 8px 12px; width: 100%; }
+    .brand-copy { flex: 1 1 180px; }
+    .brand-tagline { white-space: normal; }
+    header .brand .meta { max-width: 118px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     header .actions { width: 100%; justify-content: space-between; }
     main { padding: 12px 14px; }
   }
@@ -333,44 +343,44 @@
   .tab-pane.active { display: block; }
 
   /* Market cards */
-  .bet-card { background: linear-gradient(180deg, rgba(22,28,36,.98), rgba(15,20,26,.98));
+  .prob-card { background: linear-gradient(180deg, rgba(22,28,36,.98), rgba(15,20,26,.98));
     border: 1px solid var(--line); border-radius: 8px; padding: 10px; display:flex;
     flex-direction: column; gap: 9px; transition: transform .16s, border-color .16s;
     min-height: 188px; overflow:hidden; }
-  .bet-card:hover { border-color: var(--line2); transform: translateY(-1px); }
-  .bet-card.safe { border-left: 3px solid var(--green); }
-  .bet-card.today { border-left: 3px solid var(--amber); }
-  .bet-card.yours { border-left: 3px solid var(--violet); }
-  .bet-card-head { display:grid; grid-template-columns: 46px 1fr auto; gap: 9px; align-items:start; }
-  .bet-card .q { color: var(--fg); font-size: 12.5px; line-height: 1.3; font-weight: 700;
+  .prob-card:hover { border-color: var(--line2); transform: translateY(-1px); }
+  .prob-card.safe { border-left: 3px solid var(--green); }
+  .prob-card.today { border-left: 3px solid var(--amber); }
+  .prob-card.yours { border-left: 3px solid var(--violet); }
+  .prob-card-head { display:grid; grid-template-columns: 46px 1fr auto; gap: 9px; align-items:start; }
+  .prob-card .q { color: var(--fg); font-size: 12.5px; line-height: 1.3; font-weight: 700;
     display:flex; justify-content:space-between; align-items:flex-start; gap:8px; min-width:0; }
-  .bet-card .q span { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+  .prob-card .q span { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
     overflow:hidden; }
-  .bet-card .q .star-card { appearance:none; border:0; background:transparent; color: var(--mut);
+  .prob-card .q .star-card { appearance:none; border:0; background:transparent; color: var(--mut);
     cursor:pointer; font-family: var(--sans); font-size: 16px; line-height: 1;
     padding: 0; user-select:none; flex-shrink: 0; transition: color 0.15s, transform 0.15s; }
-  .bet-card .q .star-card.on { color: var(--amber); }
-  .bet-card .q .star-card:hover, .bet-card .q .star-card:focus-visible { color: var(--amber); transform: scale(1.18); outline:none; }
-  .bet-card .action { display:flex; align-items:baseline; gap: 10px;
+  .prob-card .q .star-card.on { color: var(--amber); }
+  .prob-card .q .star-card:hover, .prob-card .q .star-card:focus-visible { color: var(--amber); transform: scale(1.18); outline:none; }
+  .prob-card .action { display:flex; align-items:baseline; gap: 10px;
     flex-wrap: wrap; }
-  .bet-card .verb { color: var(--fg); font-size: 11px; letter-spacing: .12em; }
-  .bet-card .side-yes { color: var(--green); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
-  .bet-card .side-no { color: var(--red); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
-  .bet-card .price { color: var(--amber); font-weight: 700; font-size: 22px;
+  .prob-card .verb { color: var(--fg); font-size: 11px; letter-spacing: .12em; }
+  .prob-card .side-yes { color: var(--green); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
+  .prob-card .side-no { color: var(--red); font-weight: 700; font-size: 18px; letter-spacing: .04em; }
+  .prob-card .price { color: var(--amber); font-weight: 700; font-size: 22px;
     font-variant-numeric: tabular-nums; }
-  .bet-card .econ { font-size: 11px; color: var(--mut); }
-  .bet-card .econ .win { color: var(--green); font-variant-numeric: tabular-nums; }
-  .bet-card .econ .risk { color: var(--red); font-variant-numeric: tabular-nums; }
-  .bet-card .meta-row { display:flex; justify-content:space-between; gap: 8px;
+  .prob-card .econ { font-size: 11px; color: var(--mut); }
+  .prob-card .econ .win { color: var(--green); font-variant-numeric: tabular-nums; }
+  .prob-card .econ .risk { color: var(--red); font-variant-numeric: tabular-nums; }
+  .prob-card .meta-row { display:flex; justify-content:space-between; gap: 8px;
     color: var(--mut); font-size: 11px; padding-top: 4px;
     border-top: 1px solid var(--line); }
-  .bet-card .meta-row .pill-conf { background: rgba(34,197,94,.12); color: var(--green);
+  .prob-card .meta-row .pill-conf { background: rgba(34,197,94,.12); color: var(--green);
     border: 1px solid rgba(34,197,94,.3); padding: 1px 6px; border-radius: 9999px;
     font-size: 9.5px; font-weight: 600; letter-spacing: .04em; }
-  .bet-card .yes-big { color: var(--amber); font-weight: 700; font-size: 22px;
+  .prob-card .yes-big { color: var(--amber); font-weight: 700; font-size: 22px;
     font-variant-numeric: tabular-nums; }
-  .bet-card .yes-big.up { color: var(--green); }
-  .bet-card .yes-big.down { color: var(--red); }
+  .prob-card .yes-big.up { color: var(--green); }
+  .prob-card .yes-big.down { color: var(--red); }
   .market-thumb { width: 42px; height: 42px; border-radius: 8px; overflow:hidden;
     background: linear-gradient(145deg, rgba(245,165,36,.26), rgba(34,197,94,.18));
     border:1px solid rgba(255,255,255,.08); display:grid; place-items:center;
@@ -467,7 +477,10 @@
 <header>
   <div class="brand">
     <span class="brand-mark" aria-hidden="true"></span>
-    <h1>POLYMARKET DESK</h1>
+    <div class="brand-copy">
+      <h1>POLYMARKET DESK</h1>
+      <span class="brand-tagline">Money moves on probability</span>
+    </div>
     <span class="live" id="live"><span class="dot"></span>OFFLINE</span>
     <span class="meta" id="meta">connecting…</span>
     <span class="copy-link" id="share">copy edit link</span>
@@ -482,15 +495,15 @@
 
 <div class="notice">
   <strong>DATA ONLY</strong>
-  <span>Public market probabilities for research and triage. Not financial advice, trading instructions, or an execution venue.</span>
+  <span>Market probabilities and money flow for research and triage. Not financial advice, trading instructions, or an execution venue.</span>
 </div>
 
 <div id="status-alert" class="status-alert" hidden></div>
 
-<section class="cockpit" aria-label="Daily Trader Cockpit">
+<section class="cockpit" aria-label="Daily Probability Cockpit">
   <div class="cockpit-head">
     <div>
-      <div class="eyebrow">DAILY TRADER COCKPIT</div>
+      <div class="eyebrow">DAILY PROBABILITY COCKPIT</div>
       <h2 id="desk-title">Daily Desk</h2>
       <p class="route-copy" id="desk-route-copy">Private edit desk. Copy a read-only link when you want to share.</p>
     </div>
@@ -650,7 +663,7 @@
     </div>
     <div id="today-grid" class="grid grid-3"></div>
     <div id="today-empty" class="empty-state" style="display:none;">
-      <p>No large moves right now. Check Value Plays for more candidates.</p>
+      <p>No large moves right now. Check Probability Edges for more candidates.</p>
     </div>
   </section>
 
@@ -716,8 +729,8 @@
 <div class="tab-pane" data-pane="value">
   <section>
     <div class="section-title">
-      <h2>VALUE PLAYS</h2>
-      <span class="sub">extreme prices + active flow + medium horizon</span>
+      <h2>PROBABILITY EDGES</h2>
+      <span class="sub">priced probabilities + active flow + medium horizon</span>
     </div>
     <div class="table-wrap">
     <table id="vp-tbl">
@@ -728,7 +741,7 @@
     </table>
     </div>
     <p style="color:var(--mut); font-size:10.5px; margin-top:8px;">
-      Score = extremity × log(liquidity) × (1 + movement). Higher score means stronger consensus price plus recent flow; validate independently.
+      Probability score = extremity × log(liquidity) × (1 + movement). Higher score means stronger consensus probability plus recent flow; validate independently.
     </p>
   </section>
 </div>
@@ -1991,8 +2004,8 @@ function renderSafest(rows) {
     const riskCents = (m.rec_risk * 100).toFixed(1);
     const confPct = (m.rec_price * 100).toFixed(0);
     const days = m.days != null ? m.days + 'd' : '—';
-    return `<div class="bet-card safe" data-market-slug="${slugEsc}" tabindex="0">
-      <div class="bet-card-head">
+    return `<div class="prob-card safe" data-market-slug="${slugEsc}" tabindex="0">
+      <div class="prob-card-head">
         ${marketThumbHtml(m)}
         <div class="q">
           <span>${escapeHtml(m.question || m.slug || '')}</span>
@@ -2034,8 +2047,8 @@ function renderToday(rows) {
     const cpill = c > 0 ? 'pill-green' : 'pill-red';
     const sign = c > 0 ? '+' : '';
     const days = m.days != null ? m.days + 'd' : '—';
-    return `<div class="bet-card today" data-market-slug="${slugEsc}" tabindex="0">
-      <div class="bet-card-head">
+    return `<div class="prob-card today" data-market-slug="${slugEsc}" tabindex="0">
+      <div class="prob-card-head">
         ${marketThumbHtml(m)}
         <div class="q">
           <span>${escapeHtml(m.question || m.slug || '')}</span>
@@ -2071,8 +2084,8 @@ function renderWatchlist(wl) {
     const cpill = c > 0 ? 'pill-green' : (c < 0 ? 'pill-red' : 'pill-amber');
     const sign = c > 0 ? '+' : '';
     const days = m.days != null ? m.days + 'd' : '—';
-    return `<div class="bet-card yours" data-market-slug="${slugEsc}" tabindex="0">
-      <div class="bet-card-head">
+    return `<div class="prob-card yours" data-market-slug="${slugEsc}" tabindex="0">
+      <div class="prob-card-head">
         ${marketThumbHtml(m)}
         <div class="q">
           <span>${escapeHtml(m.question || m.slug || '')}</span>
@@ -2317,7 +2330,7 @@ function renderTradeTicket(m) {
     `<button type="button" data-trade-budget-preset="${amount}" class="${Math.abs(budget - amount) < 0.01 ? 'active' : ''}">$${amount}</button>`
   ).join('');
   return `<div class="trade-ticket" data-trade-ticket="${escapeHtml(m.slug || '')}">
-    <h3>FAST BET TICKET</h3>
+    <h3>PROBABILITY TICKET</h3>
     <div class="side-toggle">
       <button type="button" data-trade-side="YES" class="${side === 'YES' ? 'active' : ''}">BUY YES · ${fmt.pct(m.yes)}</button>
       <button type="button" data-trade-side="NO" class="${side === 'NO' ? 'active' : ''}">BUY NO · ${fmt.pct(m.no != null ? m.no : 1 - Number(m.yes || 0))}</button>
