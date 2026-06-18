@@ -31,6 +31,7 @@ Track Polymarket flow, spot sharp 24h moves, surface extreme consensus probabili
 | Shareable watchlists | Track and share a market set without accounts or wallets |
 | Market detail | Inspect price, spread, liquidity, close time, recent trades, related markets, alerts, and watch actions |
 | Probability ticket | Pick YES/NO, choose max spend, copy an order-intent plan, and open Polymarket to sign |
+| Market Pit | Vote YES/NO with conviction and chat per market with anonymous aliases |
 | V2 market desk | Since-last-open brief, named watchlists, in-app alerts, public desks, and privacy-light analytics |
 
 Polymarket Desk is intentionally **non-custodial and intent-only**. It does not submit orders, connect wallets, custody funds, or require private Polymarket credentials. The probability ticket prepares an order-intent plan and sends users to Polymarket to sign.
@@ -123,6 +124,7 @@ https://polymarket-desk-seven.vercel.app
 | Screens | High-conviction and top-flow filters for fast scanning |
 | Live Tape | Recent public trades across Polymarket |
 | Market Detail | Focused drawer with Polymarket link, bid/ask, spread, liquidity, recent trades, related markets, watchlist, alert, and order-plan actions |
+| Market Pit | Per-market community votes and last-100-message anonymous chat |
 | Watchlists | Legacy default watchlist plus named lists, import/export, clone, and read-only share links |
 | Alerts | In-app alert rules and inbox for price, move, volume, closing-soon, and watchlist-change events |
 | Public Desks | Curated desks for Top Movers, Crypto, Macro, Sports, AI, Geopolitics, and Extreme Consensus |
@@ -136,6 +138,7 @@ V2 grows Polymarket Desk from a fast market scanner into a lightweight market in
 | Since Last Open Brief | Shipped | A quick read on watchlist movers, high-flow markets, closing-soon markets, and tape prints |
 | Market Detail | Shipped | One focused view per market with price, liquidity, event context, recent trades, and watchlist actions |
 | Probability Ticket | Shipped | Build a local order-intent plan and open Polymarket for user-side signing |
+| Market Pit | Shipped | Per-market YES/NO conviction votes and anonymous last-100-message chat with basic anti-spam controls |
 | Named Watchlists | Shipped | Human-readable lists for themes like elections, crypto, AI, sports, macro, or a community's favorite markets |
 | In-App Alerts | Shipped | Browser-visible alerts for watchlist moves, volume spikes, consensus changes, and notable tape activity |
 | Public Desks | Shipped | Curated public watchlists that can be linked from posts, newsletters, Discords, and research pages |
@@ -356,6 +359,14 @@ Deletes an alert rule.
 
 Returns one curated public desk such as `crypto`, `macro`, `sports`, `ai`, `geopolitics`, `top-movers`, or `extreme-consensus`.
 
+### `GET /api/community?slug=<slug>&u=<token>`
+
+Returns one market's Market Pit state: aggregate YES/NO conviction votes, the current anonymous user's vote, the latest visible messages, and posting limits.
+
+### `POST /api/community?slug=<slug>&u=<token>`
+
+Accepts `vote`, `message`, and `report` actions. The endpoint stores hashed anonymous user ids only, keeps the last 100 messages, blocks links/scripts/scams/threats, and hides messages after repeated reports.
+
 ### `POST /api/analytics`
 
 Records aggregate, privacy-light product events. Do not send raw watchlist tokens, wallet data, IPs, private notes, or trading secrets.
@@ -454,6 +465,7 @@ The frontend is a single HTML file with embedded CSS and JavaScript. The API lay
 
 - `api/state.py` aggregates market, event, trade, screen, watchlist, cockpit, and alert-event data.
 - `api/market.py` powers the market detail drawer and probability-ticket data.
+- `api/community.py` powers per-market Market Pit votes, chat, reports, and anti-spam limits.
 - `api/watchlist.py` preserves the legacy default watchlist contract.
 - `api/watchlists.py` stores named watchlists and share/import/export flows.
 - `api/alerts.py` stores and evaluates alert rules.
@@ -537,6 +549,7 @@ Use [docs/LAUNCH.md](docs/LAUNCH.md) before public posts, demo days, or communit
 - The probability ticket creates an intent-only order plan and opens Polymarket for user-side signing.
 - No Polymarket API keys are required.
 - Watchlist state is keyed by opaque browser tokens.
+- Market Pit hashes browser tokens before storage and never stores raw user tokens, wallet data, IPs, or user agents.
 - Watchlist share links are bearer-style edit links.
 - Analytics should stay privacy-light: aggregate page/screen usage, avoid wallet or trading identity, avoid selling behavioral profiles, and disclose tracking clearly.
 - Real `.env` files and `.vercel/` are ignored and should not be committed.

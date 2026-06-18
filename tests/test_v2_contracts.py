@@ -246,5 +246,124 @@ class AnalyticsContractTests(unittest.TestCase):
         self.assertNotIn(">", str(cleaned.get("event", "")))
 
 
+class CommunityContractTests(unittest.TestCase):
+    def test_community_payload_validates_slug_token_and_shape(self):
+        community = import_optional("api.community")
+        response_payload = helper(community, "response_payload")
+        payload = response_payload("will-fed-cut-rates", "token123", [], {})
+
+        self.assertEqual(payload["slug"], "will-fed-cut-rates")
+        self.assertIn("vote_summary", payload)
+        self.assertIn("messages", payload)
+        self.assertIn("limits", payload)
+
+        with self.assertRaises(ValueError):
+            response_payload("../secret", "token123", [], {})
+        with self.assertRaises(ValueError):
+            response_payload("will-fed-cut-rates", "bad", [], {})
+
+    def test_community_sanitizes_messages_and_blocks_abuse(self):
+        community = import_optional("api.community")
+        clean_alias = helper(community, "clean_alias")
+        clean_message = helper(community, "clean_message")
+
+        self.assertEqual(clean_alias(" Prob<>Degen<script> "), "ProbDegenscript")
+        self.assertEqual(clean_message("  this market is insane   "), "this market is insane")
+        self.assertLessEqual(len(clean_message("x" * 500)), 240)
+
+        for bad_text in (
+            "join http://example.com now",
+            "<script>alert(1)</script>",
+            "claim now free money",
+            "kill yourself",
+        ):
+            with self.subTest(text=bad_text):
+                with self.assertRaises(ValueError):
+                    clean_message(bad_text)
+
+    def test_community_keeps_last_100_messages(self):
+        community = import_optional("api.community")
+        append_message = helper(community, "append_message")
+        public_messages = helper(community, "public_messages")
+        records = []
+        base = dt.datetime(2026, 1, 1, 12, 0, tzinfo=dt.timezone.utc)
+
+        for idx in range(105):
+            records, _ = append_message(
+                records,
+                "will-fed-cut-rates",
+                f"user{idx:03d}",
+                {"alias": "Desk", "text": f"message {idx}"},
+                now=base + dt.timedelta(seconds=idx),
+            )
+
+        visible = public_messages(records)
+        self.assertEqual(len(records), 100)
+        self.assertEqual(len(visible), 100)
+        self.assertEqual(visible[0]["text"], "message 5")
+        self.assertEqual(visible[-1]["text"], "message 104")
+
+    def test_community_votes_are_one_per_user_and_aggregated(self):
+        community = import_optional("api.community")
+        upsert_vote = helper(community, "upsert_vote")
+        vote_summary = helper(community, "vote_summary")
+        my_vote = helper(community, "my_vote")
+        votes = {}
+
+        votes, _ = upsert_vote(votes, "will-fed-cut-rates", "token123", {"side": "YES", "conviction": "high"})
+        votes, _ = upsert_vote(votes, "will-fed-cut-rates", "token123", {"side": "NO", "conviction": "low"})
+        votes, _ = upsert_vote(votes, "will-fed-cut-rates", "token456", {"side": "YES", "conviction": "medium"})
+
+        summary = vote_summary(votes)
+        self.assertEqual(summary["total"], 2)
+        self.assertEqual(summary["yes"], 1)
+        self.assertEqual(summary["no"], 1)
+        self.assertEqual(summary["yes_weight"], 2)
+        self.assertEqual(summary["no_weight"], 1)
+        self.assertEqual(my_vote(votes, "will-fed-cut-rates", "token123")["side"], "NO")
+
+    def test_community_reports_hide_messages(self):
+        community = import_optional("api.community")
+        append_message = helper(community, "append_message")
+        report_message = helper(community, "report_message")
+        public_messages = helper(community, "public_messages")
+
+        records, message = append_message(
+            [],
+            "will-fed-cut-rates",
+            "author1",
+            {"alias": "Desk", "text": "this is a normal hot take"},
+            now=dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc),
+        )
+        for reporter in ("report1", "report2", "report3"):
+            records = report_message(records, "will-fed-cut-rates", reporter, message["id"])
+
+        self.assertEqual(public_messages(records), [])
+
+    def test_community_rate_limit_rejects_fourth_recent_message(self):
+        community = import_optional("api.community")
+        append_message = helper(community, "append_message")
+        records = []
+        base = dt.datetime(2026, 1, 1, tzinfo=dt.timezone.utc)
+
+        for idx in range(3):
+            records, _ = append_message(
+                records,
+                "will-fed-cut-rates",
+                "token123",
+                {"alias": "Desk", "text": f"take {idx}"},
+                now=base + dt.timedelta(seconds=idx),
+            )
+
+        with self.assertRaises(ValueError):
+            append_message(
+                records,
+                "will-fed-cut-rates",
+                "token123",
+                {"alias": "Desk", "text": "one more"},
+                now=base + dt.timedelta(seconds=30),
+            )
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -54,6 +54,11 @@ V2_OPTIONAL_ENDPOINTS = {
         "methods": ["do_GET", "do_POST"],
         "purpose": "curated public desks and read-only desk snapshots",
     },
+    "api/community.py": {
+        "endpoint": "/api/community?slug=<market-slug>&u=<token>",
+        "methods": ["do_GET", "do_POST"],
+        "purpose": "per-market votes and Market Pit chat",
+    },
 }
 
 COMMAND_DOCS = [

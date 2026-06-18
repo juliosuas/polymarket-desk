@@ -468,6 +468,41 @@
   .trade-preview div { border:1px solid var(--line); border-radius:4px; padding:7px; }
   .trade-preview .k { color:var(--mut); font-size:9px; letter-spacing:.12em; text-transform:uppercase; }
   .trade-preview .v { color:var(--fg); font-size:12px; font-weight:700; }
+  .market-pit { border:1px solid var(--line); background:#0b1016; border-radius:5px;
+    margin-top:12px; padding:11px; }
+  .market-pit h3 { margin:0; color:var(--amber); font-size:10px; letter-spacing:.15em; }
+  .pit-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:9px; }
+  .pit-sub { color:var(--mut); font-size:10.5px; margin-top:2px; }
+  .pit-score { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:8px 0; }
+  .pit-score-card { border:1px solid var(--line); border-radius:4px; padding:7px; }
+  .pit-score-card .k { color:var(--mut); font-size:9px; letter-spacing:.12em; text-transform:uppercase; }
+  .pit-score-card .v { color:var(--fg); font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .pit-score-card.yes .v { color:var(--green); }
+  .pit-score-card.no .v { color:var(--red); }
+  .pit-vote { display:grid; grid-template-columns:1fr 1fr 112px; gap:7px; margin:8px 0; }
+  .pit-vote button, .pit-send { border:1px solid var(--line); background:var(--panel2);
+    color:var(--fg); border-radius:4px; padding:8px; cursor:pointer; font-size:11px; font-weight:800; }
+  .pit-vote button.active, .pit-vote button:hover, .pit-vote button:focus-visible,
+  .pit-send:hover, .pit-send:focus-visible { border-color:var(--amber); color:var(--amber); outline:none; }
+  .pit-vote select, .pit-composer input, .pit-composer textarea {
+    width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--fg);
+    border-radius:4px; padding:8px; font-size:11px; outline:none; }
+  .pit-composer { display:grid; grid-template-columns:118px 1fr auto; gap:7px; margin:9px 0; align-items:start; }
+  .pit-composer textarea { min-height:38px; resize:vertical; }
+  .pit-feed { border-top:1px solid var(--line); margin-top:9px; padding-top:4px; max-height:220px; overflow-y:auto; }
+  .pit-msg { display:grid; grid-template-columns:1fr auto; gap:7px; padding:7px 0; border-bottom:1px solid var(--line); }
+  .pit-msg .who { color:var(--amber); font-size:10px; letter-spacing:.08em; font-weight:800; }
+  .pit-msg .txt { color:var(--fg); font-size:11px; margin-top:2px; overflow-wrap:anywhere; }
+  .pit-msg .meta { color:var(--mut); font-size:9.5px; margin-top:2px; }
+  .pit-report { appearance:none; border:0; background:transparent; color:var(--mut); cursor:pointer;
+    font-size:9.5px; letter-spacing:.08em; padding:2px 0; }
+  .pit-report:hover, .pit-report:focus-visible { color:var(--amber); outline:none; }
+  .pit-error { color:var(--red); font-size:10.5px; margin-top:7px; }
+  @media (max-width: 560px) {
+    .pit-vote { grid-template-columns:1fr 1fr; }
+    .pit-vote select { grid-column:1 / -1; }
+    .pit-composer { grid-template-columns:1fr; }
+  }
 </style>
 </head>
 <body>
@@ -2253,6 +2288,10 @@ const drawerRoute = document.getElementById('drawer-route');
 const TRADE_BUDGET_PRESETS = [5, 25, 100, 500];
 let tradeSide = 'YES';
 let tradeBudget = loadTradeBudget();
+const COMMUNITY_ALIAS_KEY = 'polydash_community_alias_' + USER_TOKEN;
+const COMMUNITY_HIDDEN_KEY = 'polydash_community_hidden_' + USER_TOKEN;
+let communityCache = new Map();
+let communityHiddenIds = new Set(readStoredJson(COMMUNITY_HIDDEN_KEY, []));
 
 function normalizeTradeBudget(value) {
   const parsed = Number(String(value || '').replace(',', '.'));
@@ -2273,6 +2312,173 @@ function setTradeBudget(value) {
     localStorage.setItem('pm_trade_budget', String(tradeBudget));
   } catch(e) {}
   return tradeBudget;
+}
+
+function defaultCommunityAlias() {
+  try {
+    const stored = localStorage.getItem(COMMUNITY_ALIAS_KEY);
+    if (stored) return stored;
+  } catch(e) {}
+  const suffix = String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+  const alias = 'ProbDegen' + suffix;
+  try { localStorage.setItem(COMMUNITY_ALIAS_KEY, alias); } catch(e) {}
+  return alias;
+}
+
+function saveCommunityAlias(value) {
+  const alias = String(value || '').trim().replace(/[^a-zA-Z0-9 _.-]/g, '').slice(0, 24) || defaultCommunityAlias();
+  try { localStorage.setItem(COMMUNITY_ALIAS_KEY, alias); } catch(e) {}
+  return alias;
+}
+
+function saveHiddenCommunityIds() {
+  writeStoredJson(COMMUNITY_HIDDEN_KEY, [...communityHiddenIds].slice(-500));
+}
+
+function communityTime(ts) {
+  if (!ts) return 'now';
+  const date = new Date(ts);
+  if (Number.isNaN(date.getTime())) return 'now';
+  return date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+
+function communityState(slug) {
+  return communityCache.get(slug) || {
+    slug,
+    loading: true,
+    vote_summary: {total: 0, yes: 0, no: 0, yes_weighted_share: 0, no_weighted_share: 0},
+    my_vote: null,
+    messages: [],
+    limits: {max_message_chars: 240},
+  };
+}
+
+function renderMarketPit(slug) {
+  const state = communityState(slug);
+  const summary = state.vote_summary || {};
+  const myVote = state.my_vote || {};
+  const yesShare = Math.round(Number(summary.yes_weighted_share || 0) * 100);
+  const noShare = Math.round(Number(summary.no_weighted_share || 0) * 100);
+  const alias = escapeHtml(defaultCommunityAlias());
+  const conviction = myVote.conviction || 'medium';
+  const messages = (state.messages || []).filter(m => !communityHiddenIds.has(m.id));
+  const messageHtml = state.loading
+    ? '<div class="loading">loading market pit...</div>'
+    : (messages.length ? messages.slice(-100).map(m => `
+        <div class="pit-msg" data-community-message-id="${escapeHtml(m.id || '')}">
+          <div>
+            <div class="who">${escapeHtml(m.alias || 'ProbDegen')}</div>
+            <div class="txt">${escapeHtml(m.text || '')}</div>
+            <div class="meta">${escapeHtml(communityTime(m.created_at))}${m.side ? ' · ' + escapeHtml(m.side) : ''}${m.conviction ? ' · ' + escapeHtml(m.conviction) : ''}</div>
+          </div>
+          <button class="pit-report" type="button" data-community-report="${escapeHtml(m.id || '')}">REPORT</button>
+        </div>`).join('') : '<div class="loading">No takes yet. Light the pit.</div>');
+  const errorHtml = state.error ? `<div class="pit-error">${escapeHtml(state.error)}</div>` : '';
+  return `<div class="market-pit" data-community-slug="${escapeHtml(slug || '')}">
+    <div class="pit-head">
+      <div>
+        <h3>MARKET PIT</h3>
+        <div class="pit-sub">Vote the outcome. Talk your book. Last 100 messages.</div>
+      </div>
+      <div class="pill pill-amber">${fmt.count(summary.total || 0)} votes</div>
+    </div>
+    <div class="pit-score">
+      <div class="pit-score-card yes"><div class="k">YES crowd</div><div class="v">${yesShare}%</div></div>
+      <div class="pit-score-card no"><div class="k">NO crowd</div><div class="v">${noShare}%</div></div>
+    </div>
+    <div class="pit-vote">
+      <button type="button" data-community-vote="YES" class="${myVote.side === 'YES' ? 'active' : ''}">YES · ${fmt.count(summary.yes || 0)}</button>
+      <button type="button" data-community-vote="NO" class="${myVote.side === 'NO' ? 'active' : ''}">NO · ${fmt.count(summary.no || 0)}</button>
+      <select data-community-conviction aria-label="Conviction">
+        <option value="low" ${conviction === 'low' ? 'selected' : ''}>low</option>
+        <option value="medium" ${conviction === 'medium' ? 'selected' : ''}>medium</option>
+        <option value="high" ${conviction === 'high' ? 'selected' : ''}>high</option>
+      </select>
+    </div>
+    <form class="pit-composer" data-community-form>
+      <input data-community-alias maxlength="24" autocomplete="off" value="${alias}" aria-label="Alias">
+      <textarea data-community-text maxlength="${Number(state.limits?.max_message_chars || 240)}" placeholder="Drop a market take. No links, no scams." aria-label="Market Pit message"></textarea>
+      <button class="pit-send" type="submit">SEND</button>
+    </form>
+    ${errorHtml}
+    <div class="pit-feed">${messageHtml}</div>
+  </div>`;
+}
+
+function paintCommunityPanel(slug) {
+  const panel = document.getElementById('community-panel');
+  if (!panel || cleanSlug(panel.dataset.communitySlug) !== cleanSlug(slug)) return;
+  panel.innerHTML = renderMarketPit(slug);
+}
+
+async function loadCommunity(slug) {
+  const clean = cleanSlug(slug);
+  if (!clean) return;
+  if (!communityCache.has(clean)) {
+    communityCache.set(clean, communityState(clean));
+    paintCommunityPanel(clean);
+  }
+  try {
+    const r = await fetch('/api/community?slug=' + encodeURIComponent(clean) + '&u=' + encodeURIComponent(USER_TOKEN), {cache:'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    communityCache.set(clean, data);
+    paintCommunityPanel(clean);
+    track('community_open', {slug: clean});
+  } catch(e) {
+    communityCache.set(clean, {...communityState(clean), loading: false, error: 'Market Pit is unavailable right now.'});
+    paintCommunityPanel(clean);
+  }
+}
+
+async function postCommunity(slug, body, eventName) {
+  const clean = cleanSlug(slug);
+  if (!clean) return null;
+  try {
+    const r = await fetch('/api/community?slug=' + encodeURIComponent(clean) + '&u=' + encodeURIComponent(USER_TOKEN), {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(body),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || ('HTTP ' + r.status));
+    communityCache.set(clean, data);
+    paintCommunityPanel(clean);
+    if (eventName) track(eventName, {slug: clean, type: body.type, side: body.side});
+    return data;
+  } catch(e) {
+    communityCache.set(clean, {...communityState(clean), loading: false, error: e.message || 'Market Pit action failed.'});
+    paintCommunityPanel(clean);
+    return null;
+  }
+}
+
+async function sendCommunityVote(slug, side) {
+  const clean = cleanSlug(slug);
+  const panel = document.querySelector(`[data-community-slug="${clean}"]`);
+  const conviction = panel?.querySelector('[data-community-conviction]')?.value || 'medium';
+  await postCommunity(clean, {type:'vote', side, conviction}, 'community_vote');
+}
+
+async function submitCommunityMessage(form) {
+  const panel = form.closest('[data-community-slug]');
+  const slug = cleanSlug(panel?.dataset.communitySlug);
+  const aliasInput = form.querySelector('[data-community-alias]');
+  const textInput = form.querySelector('[data-community-text]');
+  const alias = saveCommunityAlias(aliasInput?.value || '');
+  const text = String(textInput?.value || '').trim();
+  if (!slug || !text) return;
+  const data = await postCommunity(slug, {type:'message', alias, text}, 'community_message');
+  if (data && textInput) textInput.value = '';
+}
+
+async function reportCommunityMessage(slug, messageId) {
+  const clean = cleanSlug(slug);
+  if (!clean || !messageId) return;
+  communityHiddenIds.add(messageId);
+  saveHiddenCommunityIds();
+  paintCommunityPanel(clean);
+  await postCommunity(clean, {type:'report', message_id: messageId}, 'community_report');
 }
 
 function tradeSharesForBudget(budget, price) {
@@ -2437,6 +2643,7 @@ function renderMarketDrawer(m, note = '') {
     ? `<button class="tool-button" type="button" data-clone-market="${slugEsc}">CLONE MARKET</button>`
     : `<button class="tool-button" type="button" data-drawer-watch="${slugEsc}" aria-pressed="${watchlistSlugs.has(slug)?'true':'false'}">${watchlistSlugs.has(slug)?'REMOVE':'ADD'} WATCH</button>`;
   const ticketHtml = renderTradeTicket({...m, slug, question: title});
+  const pitHtml = `<div id="community-panel" data-community-slug="${slugEsc}">${renderMarketPit(slug)}</div>`;
   const noteHtml = note ? `<div class="drawer-note">${escapeHtml(note)}</div>` : '';
   drawerRoute.textContent = slug || 'Market detail';
   marketDrawerBody.innerHTML = `
@@ -2458,6 +2665,7 @@ function renderMarketDrawer(m, note = '') {
       <button class="tool-button" type="button" data-copy-market="${slugEsc}">COPY MARKET LINK</button>
     </div>
     ${ticketHtml}
+    ${pitHtml}
     ${tradeHtml}
     ${relatedHtml}
     ${noteHtml}`;
@@ -2476,6 +2684,7 @@ async function openMarket(slug, opts = {}) {
   const cached = marketCache.get(clean);
   if (cached) {
     renderMarketDrawer(cached, 'Showing cached screen data while the market endpoint refreshes.');
+    loadCommunity(clean);
   } else {
     drawerRoute.textContent = `?m=${clean}`;
     marketDrawerBody.innerHTML = '<div class="loading">loading market…</div>';
@@ -2500,9 +2709,11 @@ async function openMarket(slug, opts = {}) {
     };
     marketCache.set(merged.slug, merged);
     renderMarketDrawer(merged);
+    loadCommunity(merged.slug);
   } catch(e) {
     if (cached) {
       renderMarketDrawer(cached, '/api/market is unavailable; showing cached screen data.');
+      loadCommunity(clean);
     } else {
       marketDrawerBody.innerHTML = `<div class="empty-state"><h3>Market unavailable</h3><p>/api/market did not return data for <code>${escapeHtml(clean)}</code>.</p></div>`;
     }
@@ -2576,6 +2787,18 @@ document.addEventListener('click', event => {
     track('share_copy', {mode: 'market', slug});
     return;
   }
+  const communityVote = event.target.closest('[data-community-vote]');
+  if (communityVote) {
+    const pit = communityVote.closest('[data-community-slug]');
+    sendCommunityVote(pit?.dataset.communitySlug, communityVote.dataset.communityVote);
+    return;
+  }
+  const communityReport = event.target.closest('[data-community-report]');
+  if (communityReport) {
+    const pit = communityReport.closest('[data-community-slug]');
+    reportCommunityMessage(pit?.dataset.communitySlug, communityReport.dataset.communityReport);
+    return;
+  }
   const sideButton = event.target.closest('[data-trade-side]');
   if (sideButton) {
     tradeSide = sideButton.dataset.tradeSide === 'NO' ? 'NO' : 'YES';
@@ -2617,7 +2840,19 @@ document.addEventListener('click', event => {
   if (marketEl) openMarket(marketEl.dataset.marketSlug, {source:'click'});
 });
 
+document.addEventListener('submit', event => {
+  const form = event.target.closest('[data-community-form]');
+  if (!form) return;
+  event.preventDefault();
+  submitCommunityMessage(form);
+});
+
 document.addEventListener('change', event => {
+  const aliasInput = event.target.closest('[data-community-alias]');
+  if (aliasInput) {
+    aliasInput.value = saveCommunityAlias(aliasInput.value);
+    return;
+  }
   const budgetInput = event.target.closest('[data-trade-budget]');
   if (!budgetInput) return;
   setTradeBudget(budgetInput.value);

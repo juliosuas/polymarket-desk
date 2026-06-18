@@ -15,6 +15,7 @@
   ],
   "functions": {
     "api/desk.py": { "maxDuration": 15 },
+    "api/community.py": { "maxDuration": 10 },
     "api/alerts.py": { "maxDuration": 10 },
     "api/analytics.py": { "maxDuration": 10 },
     "api/market.py": { "maxDuration": 15 },
