@@ -85,6 +85,8 @@ TEXT_SUFFIXES = {
 
 IGNORED_PARTS = {".git", ".venv", ".vercel", "node_modules", "__pycache__"}
 
+AGENT_SKILL_WARNING = "review before use; they run with full agent permissions"
+
 
 class InlineScriptExtractor(HTMLParser):
     """Collect executable inline JavaScript blocks from an HTML document."""
@@ -263,6 +265,39 @@ def check_no_obvious_secrets() -> None:
                 fail(f"possible secret in {path.relative_to(ROOT)}: {match.group(0)[:8]}...")
 
 
+def check_agent_skills_governance() -> None:
+    skills_dir = ROOT / ".agents" / "skills"
+    if not skills_dir.exists():
+        return
+    if not skills_dir.is_dir():
+        fail(".agents/skills exists but is not a directory")
+
+    lock_path = ROOT / "skills-lock.json"
+    if not lock_path.is_file():
+        fail(".agents/skills is present but skills-lock.json is missing")
+    try:
+        lock = json.loads(read_text(lock_path))
+    except json.JSONDecodeError as exc:
+        fail(f"skills-lock.json is invalid JSON: {exc}")
+    locked_skills = (lock.get("skills") or {}) if isinstance(lock, dict) else {}
+    if not isinstance(locked_skills, dict) or not locked_skills:
+        fail("skills-lock.json must list installed skills")
+
+    installed = sorted(path.name for path in skills_dir.iterdir() if path.is_dir())
+    missing_lock = [name for name in installed if name not in locked_skills]
+    if missing_lock:
+        fail("installed agent skills are missing from skills-lock.json: " + ", ".join(missing_lock))
+    for name in installed:
+        if not (skills_dir / name / "SKILL.md").is_file():
+            fail(f"installed agent skill is missing SKILL.md: {name}")
+
+    readme_path = ROOT / ".agents" / "skills" / "README.md"
+    if not readme_path.is_file():
+        fail(".agents/skills/README.md is required to document agent skill risk")
+    if AGENT_SKILL_WARNING not in read_text(readme_path).lower():
+        fail(".agents/skills/README.md must mention full agent permissions and review before use")
+
+
 def print_command_docs() -> None:
     print("Commands:")
     for label, command in COMMAND_DOCS:
@@ -278,6 +313,7 @@ def main() -> None:
     check_inline_js_syntax()
     check_contract_tests()
     check_no_obvious_secrets()
+    check_agent_skills_governance()
     print_command_docs()
     print("OK: repository checks passed")
 
