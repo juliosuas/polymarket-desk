@@ -34,6 +34,7 @@ Track Polymarket flow, spot sharp 24h moves, surface extreme consensus probabili
 | Probability ticket | Pick YES/NO, choose max spend, copy an order-intent plan, and open Polymarket to sign |
 | Market Pit | Vote YES/NO with conviction and chat per market with anonymous aliases |
 | V2 market desk | Since-last-open brief, named watchlists, in-app alerts, public desks, and privacy-light analytics |
+| Daily brief export | Copy a shareable Markdown or plain-text market brief for posts, newsletters, and community updates |
 
 Polymarket Desk is intentionally **non-custodial and intent-only**. It does not submit orders, connect wallets, custody funds, or require private Polymarket credentials. The probability ticket prepares an order-intent plan and sends users to Polymarket to sign.
 
@@ -144,7 +145,7 @@ V2 grows Polymarket Desk from a fast market scanner into a lightweight market in
 | In-App Alerts | Shipped | Browser-visible alerts for watchlist moves, volume spikes, consensus changes, and notable tape activity |
 | Public Desks | Shipped | Curated public watchlists that can be linked from posts, newsletters, Discords, and research pages |
 | Privacy-Light Analytics | Shipped | Aggregate usage signals for product decisions without wallets, trading keys, personal profiles, or invasive tracking |
-| Daily Brief | Open roadmap | A shareable summary of top movers, flow, consensus shifts, and markets worth checking each day |
+| Daily Brief Export | Shipped | A copy-ready Markdown or plain-text summary of top movers, flow, consensus shifts, closers, watchlist moves, and tape prints |
 
 These features should preserve the current boundary: Polymarket Desk can prepare intent, but users sign and execute on Polymarket.
 
@@ -155,7 +156,7 @@ These features should preserve the current boundary: Polymarket Desk can prepare
 - **Shareable watchlists**: a simple URL can carry a market list across devices or groups.
 - **Fast probability tickets**: choose side and max spend, then open Polymarket to sign without sharing keys with this app.
 - **Hackable architecture**: no heavy frontend framework, simple Python APIs, easy to fork.
-- **Clear expansion path**: daily briefs, market detail, named watchlists, alerts, analytics, public desks, and historical data.
+- **Clear expansion path**: richer alert delivery, market history, charts, fixtures, public desk packs, and workflow automation.
 
 ## Screenshots
 
@@ -526,7 +527,7 @@ Good first areas:
 
 - Better market filters and ranking heuristics.
 - Alert integrations for Discord, Telegram, email, or webhooks.
-- Public desk curation, historical snapshots, charts, and daily briefs.
+- Public desk curation, historical snapshots, charts, and richer brief templates.
 - More tests around API normalization and watchlist behavior.
 - Accessibility, mobile polish, and copy improvements.
 
@@ -538,7 +539,7 @@ Use [docs/LAUNCH.md](docs/LAUNCH.md) before public posts, demo days, or communit
 
 ### Near term
 
-- Add a true daily brief export for top movers, flow, consensus shifts, and watchlist changes.
+- Add richer daily brief templates for topic desks, watchlists, and newsletter-ready formats.
 - Improve alert inbox ergonomics and add richer event messages.
 - Add historical sparkline snapshots for opened/detail markets.
 - Add fixtures for public desk and alert evaluation tests.
