@@ -26,3 +26,4 @@ snapshots/
 .idea/
 *.swp
 .vercel
+.env*
