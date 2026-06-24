@@ -2,7 +2,7 @@
 
 Use this when preparing Polymarket Desk for a public push, demo day, community post, or open-source launch.
 
-Position it as an open-source Polymarket terminal and probability intelligence desk: useful today as a non-custodial cockpit with optional accounts, market scanning, detail views, Market Pit community votes/chat, named watchlists, in-app alerts, public desks, privacy-light analytics, and order-intent plans that users sign on Polymarket.
+Position it as an open-source Polymarket terminal and probability intelligence desk: useful today as a non-custodial cockpit with optional accounts, market scanning, detail views, Market Pit community votes/chat, named watchlists, in-app alerts, public desks, daily brief export, privacy-light analytics, and order-intent plans that users sign on Polymarket.
 
 ## Repository
 
@@ -35,7 +35,7 @@ Position it as an open-source Polymarket terminal and probability intelligence d
 
 ## Short Pitch
 
-Polymarket Desk is an open-source Polymarket terminal: top markets, 24h movers, consensus screens, live money flow, Market Pit chat, optional accounts, watchlists, alerts, public desks, and order-intent plans in one fast non-custodial probability desk.
+Polymarket Desk is an open-source Polymarket terminal: top markets, 24h movers, consensus screens, live money flow, Market Pit chat, optional accounts, watchlists, alerts, public desks, daily brief export, and order-intent plans in one fast non-custodial probability desk.
 
 ## Longer Pitch
 
@@ -46,9 +46,9 @@ Prediction markets are becoming a real-time layer for news, politics, sports, cr
 ### X
 
 ```text
-I built Polymarket Desk: an open-source, non-custodial Polymarket terminal for scanning top markets, 24h movers, consensus probabilities, live money flow, Market Pit community takes, optional accounts, watchlists, alerts, public desks, and order-intent plans.
+I built Polymarket Desk: an open-source, non-custodial Polymarket terminal for scanning top markets, 24h movers, consensus probabilities, live money flow, Market Pit community takes, optional accounts, watchlists, alerts, public desks, daily brief export, and order-intent plans.
 
-Now live: market detail, per-market votes/chat, optional accounts, named watchlists, in-app alerts, public desks, privacy-light analytics, and a probability ticket that opens Polymarket for user-side signing.
+Now live: market detail, per-market votes/chat, optional accounts, named watchlists, in-app alerts, public desks, copy-ready daily briefs, privacy-light analytics, and a probability ticket that opens Polymarket for user-side signing.
 
 Demo: https://polymarket-desk-seven.vercel.app
 Repo: https://github.com/juliosuas/polymarket-desk
@@ -57,9 +57,9 @@ Repo: https://github.com/juliosuas/polymarket-desk
 ### Reddit
 
 ```text
-I built an open-source Polymarket desk for market scanning: top flow, 24h movers, consensus screens, live money flow, per-market votes/chat, optional accounts, shareable watchlists, alerts, public desks, and order-intent plans. It is non-custodial: no wallet connection, no server-side order execution, no private Polymarket credentials.
+I built an open-source Polymarket desk for market scanning: top flow, 24h movers, consensus screens, live money flow, per-market votes/chat, optional accounts, shareable watchlists, alerts, public desks, daily brief export, and order-intent plans. It is non-custodial: no wallet connection, no server-side order execution, no private Polymarket credentials.
 
-I am especially looking for feedback on which screens are useful, which alerts would matter, and what a daily prediction-market brief should include.
+I am especially looking for feedback on which screens are useful, which alerts would matter, and what people want in copy-ready prediction-market briefs.
 
 Demo: https://polymarket-desk-seven.vercel.app
 Repo: https://github.com/juliosuas/polymarket-desk
@@ -70,9 +70,9 @@ Repo: https://github.com/juliosuas/polymarket-desk
 ```text
 Show HN: Polymarket Desk - an open-source terminal for prediction-market intelligence
 
-Polymarket Desk is a non-custodial Vercel app that aggregates public Polymarket data into a fast probability cockpit: top markets, 24h movers, consensus screens, live money flow, per-market Market Pit chat, optional accounts, shareable watchlists, alerts, public desks, and order-intent plans.
+Polymarket Desk is a non-custodial Vercel app that aggregates public Polymarket data into a fast probability cockpit: top markets, 24h movers, consensus screens, live money flow, per-market Market Pit chat, optional accounts, shareable watchlists, alerts, public desks, daily brief export, and order-intent plans.
 
-The repo is intentionally small: vanilla HTML/CSS/JS, Python serverless functions, Vercel KV for accounts, watchlists, and alerts, no wallet connection, and no private Polymarket credentials. The open roadmap focuses on daily brief export, historical snapshots, richer alerts, community public desks, and contributor-friendly tests.
+The repo is intentionally small: vanilla HTML/CSS/JS, Python serverless functions, Vercel KV for accounts, watchlists, and alerts, no wallet connection, and no private Polymarket credentials. The open roadmap focuses on richer brief templates, historical snapshots, richer alerts, community public desks, and contributor-friendly tests.
 ```
 
 ### Discord
@@ -86,9 +86,9 @@ Useful bits:
 - live public trade tape
 - Market Pit votes and anonymous market chat
 - shareable watchlists for themes or groups
-- alerts, public desks, and order-intent plans
+- alerts, public desks, daily brief export, and order-intent plans
 
-Open-source contributors wanted: public desk curation, alert delivery, mobile polish, tests, historical charts, and daily brief export.
+Open-source contributors wanted: public desk curation, alert delivery, mobile polish, tests, historical charts, and richer brief templates.
 
 Demo: https://polymarket-desk-seven.vercel.app
 Repo: https://github.com/juliosuas/polymarket-desk

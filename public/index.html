@@ -212,6 +212,14 @@
     font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .brief-card .v.hot { color: var(--amber); }
   .brief-card .s { color: var(--mut); font-size: 10px; margin-top: 2px; overflow-wrap:anywhere; }
+  .daily-export { border: 1px solid var(--line); border-radius: 7px; background: #0d1420;
+    margin: 0 0 11px; padding: 10px; display:grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px; align-items:start; }
+  .daily-export .k { color: var(--amber); font-size: 10px; letter-spacing: .15em; font-weight: 800; }
+  .daily-export .v { color: var(--fg); font-size: 12px; font-weight: 700; margin-top: 2px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .daily-export .s { color: var(--mut); font-size: 10.5px; margin-top: 3px; overflow-wrap:anywhere; }
+  .daily-export-actions { display:flex; gap: 7px; flex-wrap:wrap; justify-content:flex-end; }
   .cockpit-grid { display:grid; grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr);
     gap: 10px; }
   .control-block { border: 1px solid var(--line); border-radius: 7px; padding: 10px;
@@ -256,6 +264,8 @@
   @media (max-width: 980px) {
     .quick-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .since-brief { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .daily-export { grid-template-columns: 1fr; }
+    .daily-export-actions { justify-content:flex-start; }
     .cockpit-grid { grid-template-columns: 1fr; }
     .alert-form { grid-template-columns: 1fr 1fr; }
     .alert-form .note-field { grid-column: 1 / -1; }
@@ -598,6 +608,18 @@
       <div class="k">Since last open</div>
       <div class="v">Waiting</div>
       <div class="s">Market state is loading.</div>
+    </div>
+  </div>
+
+  <div class="daily-export" id="daily-export" aria-live="polite">
+    <div>
+      <div class="k">DAILY BRIEF</div>
+      <div class="v" id="daily-brief-title">Waiting for market state</div>
+      <div class="s" id="daily-brief-summary">Top movers, flow, consensus, closers, watchlist moves, and tape prints will appear after refresh.</div>
+    </div>
+    <div class="daily-export-actions">
+      <button class="tool-button" type="button" id="copy-brief-md" disabled>COPY MD</button>
+      <button class="tool-button" type="button" id="copy-brief-text" disabled>COPY TEXT</button>
     </div>
   </div>
 
@@ -1197,6 +1219,10 @@ const shareCopy = document.getElementById('share-copy');
 const copyReadonlyButton = document.getElementById('copy-readonly');
 const copyEditButton = document.getElementById('copy-edit');
 const cloneDeskButton = document.getElementById('clone-desk');
+const dailyBriefTitle = document.getElementById('daily-brief-title');
+const dailyBriefSummary = document.getElementById('daily-brief-summary');
+const copyBriefMdButton = document.getElementById('copy-brief-md');
+const copyBriefTextButton = document.getElementById('copy-brief-text');
 const watchlistTools = document.getElementById('watchlist-tools');
 const watchlistToolsState = document.getElementById('watchlist-tools-state');
 const alertsPanel = document.getElementById('alerts-panel');
@@ -1717,6 +1743,14 @@ document.getElementById('share').addEventListener('click', copyEditLink);
 copyReadonlyButton.addEventListener('click', copyReadOnlyLink);
 copyEditButton.addEventListener('click', copyEditLink);
 cloneDeskButton.addEventListener('click', cloneDeskToWatchlist);
+copyBriefMdButton.addEventListener('click', () => {
+  copyText(copyBriefMdButton.dataset.brief || '', copyBriefMdButton, 'COPIED');
+  track('daily_brief_copy', {format: 'markdown'});
+});
+copyBriefTextButton.addEventListener('click', () => {
+  copyText(copyBriefTextButton.dataset.brief || '', copyBriefTextButton, 'COPIED');
+  track('daily_brief_copy', {format: 'text'});
+});
 saveWatchlistNameButton.addEventListener('click', () => {
   if (isReadOnlyDesk()) return;
   watchlistName = watchlistNameInput.value.trim() || 'Daily Desk';
@@ -2168,6 +2202,7 @@ function render(s) {
   if (s.top_flow) renderFlow(s.top_flow);
   if (s.trades) renderTape(s.trades);
   renderSummary(s);
+  renderDailyBrief(s);
   renderSinceBrief(s);
   handleAlertEvents(s.alert_events);
   renderAlerts();
@@ -2195,6 +2230,95 @@ function briefTimeLabel(ts) {
   if (!ts) return 'First open';
   const dt = new Date(ts);
   return dt.toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+}
+
+function marketLine(m, includeMove = true) {
+  if (!m) return '';
+  const question = String(m.question || m.title || m.slug || 'Market').trim();
+  const bits = [];
+  if (m.yes != null) bits.push(`YES ${fmt.pct(Number(m.yes), 0)}`);
+  if (includeMove && m.one_day_change != null) bits.push(fmt.pp(Number(m.one_day_change)));
+  bits.push(`${fmt.vol(Number(m.vol24h || m.volume24hr || 0))} 24h`);
+  if (m.days != null) bits.push(`${m.days}d`);
+  return `${question} (${bits.filter(Boolean).join(' · ')})`;
+}
+
+function topRows(rows, count = 3) {
+  return (rows || []).filter(Boolean).slice(0, count);
+}
+
+function closingSoonRows(rows) {
+  return (rows || [])
+    .filter(m => m && typeof m.days === 'number' && m.days >= 0 && m.days <= 3)
+    .sort((a, b) => Number(a.days || 0) - Number(b.days || 0))
+    .slice(0, 3);
+}
+
+function buildDailyBrief(s) {
+  const movers = topRows(s.top_movers, 3);
+  const flow = topRows(s.top_flow || s.trending_markets, 3);
+  const consensus = topRows(s.high_conv || s.safest, 3);
+  const closers = closingSoonRows([
+    ...(s.watchlist || []),
+    ...(s.trending_markets || []),
+    ...(s.top_flow || []),
+  ]);
+  const watchMoves = topRows((s.watchlist || [])
+    .filter(m => Math.abs(Number(m.one_day_change || 0)) >= 0.03)
+    .sort((a, b) => Math.abs(Number(b.one_day_change || 0)) - Math.abs(Number(a.one_day_change || 0))), 3);
+  const tape = topRows(s.trades, 3);
+  const sections = [
+    ['Top movers', movers.map(m => marketLine(m))],
+    ['Top flow', flow.map(m => marketLine(m, false))],
+    ['Consensus watch', consensus.map(m => marketLine(m))],
+    ['Closing soon', closers.map(m => marketLine(m))],
+    ['Watchlist moves', watchMoves.map(m => marketLine(m))],
+    ['Notable tape', tape.map(t => {
+      const side = t.side || 'TRADE';
+      const title = t.title || t.slug || 'Market';
+      const price = t.price != null ? ` @ ${fmt.pct(Number(t.price), 0)}` : '';
+      return `${side} ${fmt.count(Number(t.size || 0))}${price} · ${title}`;
+    })],
+  ];
+  const nonEmpty = sections.filter(([, lines]) => lines.length);
+  if (!nonEmpty.length) return null;
+  const title = `Polymarket Desk Daily Brief · ${new Date(s.ts || Date.now()).toLocaleDateString()}`;
+  const markdown = [
+    `# ${title}`,
+    '',
+    'Data-only market scan. Not financial advice.',
+    '',
+    ...sections.flatMap(([name, lines]) => [
+      `## ${name}`,
+      ...(lines.length ? lines.map(line => `- ${line}`) : ['- No signal in current state.']),
+      '',
+    ]),
+  ].join('\n').trim();
+  const text = markdown
+    .replace(/^# /gm, '')
+    .replace(/^## /gm, '')
+    .replace(/^- /gm, '- ');
+  return {title, markdown, text, sections: nonEmpty};
+}
+
+function renderDailyBrief(s) {
+  const brief = buildDailyBrief(s || {});
+  if (!brief) {
+    dailyBriefTitle.textContent = 'No briefable market state yet';
+    dailyBriefSummary.textContent = 'Refresh when Polymarket state is available.';
+    copyBriefMdButton.disabled = true;
+    copyBriefTextButton.disabled = true;
+    copyBriefMdButton.dataset.brief = '';
+    copyBriefTextButton.dataset.brief = '';
+    return;
+  }
+  const firstSection = brief.sections[0];
+  dailyBriefTitle.textContent = brief.title;
+  dailyBriefSummary.textContent = `${firstSection[0]}: ${firstSection[1][0]}`;
+  copyBriefMdButton.disabled = false;
+  copyBriefTextButton.disabled = false;
+  copyBriefMdButton.dataset.brief = brief.markdown;
+  copyBriefTextButton.dataset.brief = brief.text;
 }
 
 function renderSinceBrief(s) {
